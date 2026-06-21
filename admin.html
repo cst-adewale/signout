@@ -14,28 +14,174 @@
     <style>
         body { background: var(--color-bg-soft); }
 
-        .chart-bar-wrap { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-2) 0; }
-        .chart-bar-row { display: flex; align-items: center; gap: var(--sp-4); font-size: .875rem; }
-        .chart-bar-label { width: 80px; flex-shrink: 0; color: var(--color-text-sub); }
-        .chart-bar-track { flex: 1; height: 10px; background: var(--color-bg-muted); border-radius: var(--r-full); overflow: hidden; }
-        .chart-bar-fill { height: 100%; background: var(--color-ink); border-radius: var(--r-full); transition: width .6s ease; }
-        .chart-bar-count { min-width: 28px; text-align: right; font-weight: 600; }
-
+        /* ── Analytics grid ─────────────────────────── */
         .analytics-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-4); }
         @media (min-width: 768px) { .analytics-grid { grid-template-columns: repeat(2, 1fr); } }
 
-        .analytics-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-6); }
-        .analytics-card__title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-faint); margin-bottom: var(--sp-5); }
+        .analytics-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--r-md);
+            padding: var(--sp-6);
+        }
+        .analytics-card__title {
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--color-text-faint);
+            margin-bottom: var(--sp-5);
+        }
 
+        /* ── Grid-line vertical bar chart ──────────────── */
+        .sos-chart-v {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-top: var(--sp-2);
+        }
+
+        .sos-chart-v__body {
+            position: relative;
+            height: 220px;
+            margin-bottom: var(--sp-3);
+            border-bottom: 2px solid var(--color-border);
+            border-left: 2px solid var(--color-border);
+        }
+
+        /* Horizontal grid lines running across */
+        .sos-chart-v__h-lines {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sos-chart-v__h-lines span {
+            display: block;
+            width: 100%;
+            border-top: 1px dashed var(--color-border);
+        }
+
+        /* Vertical grid lines running down */
+        .sos-chart-v__v-lines {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sos-chart-v__v-lines span {
+            display: block;
+            height: 100%;
+            border-left: 1px dashed var(--color-border);
+        }
+
+        /* Columns containing vertical bars */
+        .sos-chart-v__columns {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: flex-end;
+            width: 100%;
+            height: 100%;
+            padding: 0 var(--sp-2);
+        }
+
+        /* Individual column container */
+        .sos-chart-v__col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+            flex: 1;
+        }
+
+        /* Value label on top of bar */
+        .sos-chart-v__val {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: var(--sp-1);
+            color: var(--color-ink);
+            z-index: 2;
+        }
+
+        /* Vertical Bar Track */
+        .sos-chart-v__track {
+            width: 24px;
+            height: 160px; /* boundable max height */
+            background: var(--color-bg-soft, #f3f4f6);
+            border-radius: var(--r-xs) var(--r-xs) 0 0;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+            border: 1px solid var(--color-border);
+        }
+        @media (min-width: 480px) {
+            .sos-chart-v__track {
+                width: 36px;
+            }
+        }
+
+        /* Bar Fill */
+        .sos-chart-v__fill {
+            width: 100%;
+            height: 0%; /* animated from JS */
+            border-radius: var(--r-xs) var(--r-xs) 0 0;
+            transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Colour palette for vertical bars */
+        .sos-chart-v__col:nth-child(1) .sos-chart-v__fill { background: linear-gradient(180deg, #444 0%, #111 100%); }
+        .sos-chart-v__col:nth-child(2) .sos-chart-v__fill { background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%); }
+        .sos-chart-v__col:nth-child(3) .sos-chart-v__fill { background: linear-gradient(180deg, #34d399 0%, #059669 100%); }
+        .sos-chart-v__col:nth-child(4) .sos-chart-v__fill { background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%); }
+        .sos-chart-v__col:nth-child(5) .sos-chart-v__fill { background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%); }
+        .sos-chart-v__col:nth-child(6) .sos-chart-v__fill { background: linear-gradient(180deg, #f472b6 0%, #be185d 100%); }
+
+        /* Labels container at the bottom */
+        .sos-chart-v__labels {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            width: 100%;
+            padding: 0 var(--sp-2);
+        }
+        .sos-chart-v__label-item {
+            flex: 1;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-top: var(--sp-1);
+        }
+
+        /* empty state */
+        .sos-chart__empty {
+            font-size: .875rem;
+            color: var(--color-text-faint);
+            padding: var(--sp-4) 0;
+            text-align: center;
+        }
+
+        /* ── Misc admin styles ──────────────────────── */
         .locked-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: var(--sp-8); background: var(--color-bg); }
         .locked-screen__icon { font-size: 4rem; margin-bottom: var(--sp-6); }
         .locked-screen__title { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--sp-2); }
         .locked-screen__sub { color: var(--color-text-sub); margin-bottom: var(--sp-8); }
-
         .admin-main { max-width: var(--max-w); margin: 0 auto; padding: var(--sp-8) var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-8); }
-
         .badge--delivery { background: #dbeafe; color: #1d4ed8; }
-
         @media (min-width: 768px) { .order-details-grid { grid-template-columns: repeat(3, 1fr) !important; } }
     </style>
 </head>

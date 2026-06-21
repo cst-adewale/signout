@@ -1,5 +1,5 @@
 /**
- * admin.js — Admin Dashboard Logic
+ * admin.js — Admin Dashboard Logic (Optimized for Performance)
  * Signoutshirts | Class of 2026
  */
 
@@ -8,7 +8,15 @@ const state = {
     password: sessionStorage.getItem('sos_admin_pass') || '',
     orders: [],
     analytics: null,
-    filter: 'all'
+    filter: 'all',
+    ordersRendered: 0,
+    lastLoadTime: 0
+};
+
+const CONFIG = {
+    ORDERS_PER_BATCH: 20,
+    CACHE_DURATION: 30000, // 30 seconds
+    SCROLL_THRESHOLD: 300 // pixels from bottom to trigger load more
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -93,9 +101,16 @@ function handleLogout() {
     showLockedScreen();
 }
 
-// ─── Data Loading (Parallel for speed) ────────────────────────────────────────
-async function loadData() {
+// ─── Data Loading with Caching ────────────────────────────────────────────────
+async function loadData(forceRefresh = false) {
     try {
+        // Check if we can use cached data
+        const now = Date.now();
+        if (!forceRefresh && state.lastLoadTime && now - state.lastLoadTime < CONFIG.CACHE_DURATION) {
+            console.log('✓ Using cached data (fresh within', CONFIG.CACHE_DURATION / 1000, 'seconds)');
+            return;
+        }
+
         const headers = { 'x-admin-password': state.password };
 
         // Fetch analytics & orders in parallel for maximum speed
@@ -117,8 +132,11 @@ async function loadData() {
 
         if (dataOrders.success) {
             state.orders = dataOrders.orders;
+            state.ordersRendered = 0; // Reset virtual list
             renderOrders();
         }
+
+        state.lastLoadTime = now;
 
     } catch (err) {
         console.error('Error loading admin dashboard data:', err);
@@ -135,13 +153,25 @@ function renderStats(summary) {
     $('#stat-revenue').textContent = fmt(summary.revenue);
 }
 
-// ─── Render Charts ───────────────────────────────────────────────────────────
+// ─── Render Charts (Lazy Load with Grid Lines) ───────────────────────────────
 function renderCharts(charts) {
     if (!charts) return;
-    renderChartBar('chart-designs', charts.designs);
-    renderChartBar('chart-sizes', charts.sizes);
-    renderChartBar('chart-types', charts.types);
-    renderChartBar('chart-payments', charts.payments);
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                const chartKey = id.replace('chart-', '');
+                renderChartBar(id, charts[chartKey]);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+
+    ['designs', 'sizes', 'types', 'payments'].forEach(key => {
+        const el = document.getElementById(`chart-${key}`);
+        if (el) observer.observe(el);
+    });
 }
 
 function renderChartBar(containerId, data) {
@@ -149,26 +179,168 @@ function renderChartBar(containerId, data) {
     if (!container) return;
 
     if (!data || data.length === 0) {
-        container.innerHTML = '<div style="color:var(--color-text-faint); font-size:.875rem;">No data yet</div>';
+        container.innerHTML = '<div class="sos-chart__empty">No data yet</div>';
         return;
     }
 
     const maxVal = Math.max(...data.map(d => d.count), 1);
-    container.innerHTML = data.map(d => {
-        const pct = (d.count / maxVal) * 100;
+    const H_GRID_LINES = 5; // 5 horizontal lines
+    const V_GRID_LINES = data.length; // vertical line for each bar column
+
+    // Build columns HTML
+    const columnsHtml = data.map(d => {
+        const pct = Math.round((d.count / maxVal) * 100);
         return `
-            <div class="chart-bar-row">
-                <span class="chart-bar-label">${d.label === 'custom' ? 'Customized' : d.label === 'plain' ? 'Plain' : d.label}</span>
-                <div class="chart-bar-track">
-                    <div class="chart-bar-fill" style="width: ${pct}%"></div>
-                </div>
-                <span class="chart-bar-count">${d.count}</span>
+        <div class="sos-chart-v__col">
+            <span class="sos-chart-v__val">${d.count}</span>
+            <div class="sos-chart-v__track">
+                <div class="sos-chart-v__fill" data-pct="${pct}" style="height:0%"></div>
             </div>
-        `;
+        </div>`;
     }).join('');
+
+    // Build bottom label items HTML
+    const labelsHtml = data.map(d => {
+        const labelText = d.label === 'custom' ? 'Customized'
+            : d.label === 'plain' ? 'Plain'
+            : d.label === 'bank-transfer' ? 'Bank Transfer'
+            : d.label === 'ussd' ? 'USSD'
+            : d.label;
+        return `<span class="sos-chart-v__label-item" title="${labelText}">${labelText}</span>`;
+    }).join('');
+
+    // Build grid line elements
+    const hLines = Array.from({ length: H_GRID_LINES }, () => '<span></span>').join('');
+    const vLines = Array.from({ length: V_GRID_LINES }, () => '<span></span>').join('');
+
+    container.innerHTML = `
+        <div class="sos-chart-v">
+            <div class="sos-chart-v__body">
+                <!-- Grid Backdrop -->
+                <div class="sos-chart-v__h-lines">${hLines}</div>
+                <div class="sos-chart-v__v-lines">${vLines}</div>
+                
+                <!-- Columns -->
+                <div class="sos-chart-v__columns">
+                    ${columnsHtml}
+                </div>
+            </div>
+            <!-- X Axis Labels -->
+            <div class="sos-chart-v__labels">
+                ${labelsHtml}
+            </div>
+        </div>`;
+
+    // Animate bar heights
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            container.querySelectorAll('.sos-chart-v__fill').forEach(fill => {
+                const pct = fill.dataset.pct;
+                fill.style.height = pct + '%';
+            });
+        });
+    });
 }
 
-// ─── Render Orders List ──────────────────────────────────────────────────────
+// ─── Build Order HTML (Extracted for reuse) ──────────────────────────────────
+function buildOrderHTML(order) {
+    const date = new Date(order.createdAt).toLocaleDateString('en-NG', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const isPending = order.status === 'pending';
+    const isConfirmed = order.status === 'confirmed';
+    const isDelivery = order.status === 'delivery';
+
+    const statusLabels = {
+        pending: 'Pending',
+        confirmed: 'Confirmed',
+        rejected: 'Rejected',
+        delivery: '🚚 Out for Delivery',
+        delivered: '✅ Delivered'
+    };
+
+    return `
+        <div class="admin-order-row" style="background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-5); margin-bottom: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--color-border); padding-bottom: var(--sp-3); flex-wrap: wrap; gap: var(--sp-2);">
+                <div>
+                    <strong style="font-size: 1.1rem; color: var(--color-ink);">#${order.id}</strong>
+                    <span style="font-size: .8rem; color: var(--color-text-sub); margin-left: var(--sp-3);">${date}</span>
+                </div>
+                <span class="badge badge--${order.status}">${statusLabels[order.status] || order.status}</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: var(--sp-4);" class="order-details-grid">
+                <!-- Customer Info -->
+                <div>
+                    <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Customer Info</h4>
+                    <div style="font-size: .9rem; line-height: 1.5;">
+                        <div><strong>Name:</strong> ${order.customer.name}</div>
+                        <div><strong>Email:</strong> ${order.customer.email}</div>
+                        <div><strong>WhatsApp:</strong> <a href="https://wa.me/${order.customer.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #25d366; text-decoration: underline; font-weight: 500;">${order.customer.whatsapp} 💬</a></div>
+                        <div><strong>Location:</strong> ${order.customer.location}</div>
+                    </div>
+                </div>
+                
+                <!-- Shirt Details -->
+                <div>
+                    <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Shirt Details</h4>
+                    <div style="font-size: .9rem; line-height: 1.5;">
+                        <div><strong>Design:</strong> ${order.design.name} (${order.design.id})</div>
+                        <div><strong>Type:</strong> ${order.shirtType === 'custom' ? 'Customized' : 'Plain'}</div>
+                        <div><strong>Size &amp; Qty:</strong> ${order.size} &times; ${order.qty}</div>
+                        ${order.shirtType === 'custom' ? `<div><strong>Back Print:</strong> "${order.customization.name}" (#${order.customization.number || 'None'})</div>` : ''}
+                    </div>
+                </div>
+                
+                <!-- Payment -->
+                <div>
+                    <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Payment</h4>
+                    <div style="font-size: .9rem; line-height: 1.5; margin-bottom: var(--sp-2);">
+                        <div><strong>Method:</strong> ${order.payment.method === 'bank-transfer' ? 'Bank Transfer' : 'USSD'}</div>
+                        <div><strong>Total:</strong> <strong style="color: var(--color-ink);">${fmt(order.pricing.total)}</strong></div>
+                    </div>
+                    ${order.receipt && order.receipt.name ? `
+                        <button class="btn btn-secondary btn-sm view-receipt-btn" data-id="${order.id}">
+                            📄 View Receipt
+                        </button>
+                    ` : '<span style="color: var(--color-text-faint); font-size: .85rem;">No Receipt Uploaded</span>'}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            ${isPending ? `
+                <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2); flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm reject-order-btn" data-id="${order.id}" style="color: #dc2626; border-color: #fca5a5;">
+                        ✕ Reject Payment
+                    </button>
+                    <button class="btn btn-primary btn-sm confirm-order-btn" data-id="${order.id}">
+                        ✓ Confirm Order
+                    </button>
+                </div>
+            ` : ''}
+
+            ${isConfirmed ? `
+                <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
+                    <button class="btn btn-primary btn-sm delivery-order-btn" data-id="${order.id}" style="background: #1d4ed8;">
+                        🚚 Sent for Delivery
+                    </button>
+                </div>
+            ` : ''}
+
+            ${isDelivery ? `
+                <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
+                    <button class="btn btn-success btn-sm delivered-order-btn" data-id="${order.id}">
+                        ✅ Mark as Delivered
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// ─── Virtualized Orders List (Load More on Scroll) ──────────────────────────
 function renderOrders() {
     const container = $('#admin-orders-list');
     if (!container) return;
@@ -189,137 +361,155 @@ function renderOrders() {
         return;
     }
 
-    container.innerHTML = filtered.map(order => {
-        const date = new Date(order.createdAt).toLocaleDateString('en-NG', {
-            hour: '2-digit', minute: '2-digit'
-        });
+    // Clear and render initial batch
+    container.innerHTML = '';
+    state.ordersRendered = 0;
+    state.currentFilteredOrders = filtered; // Store for "load more"
 
-        const isPending = order.status === 'pending';
-        const isConfirmed = order.status === 'confirmed';
-        const isDelivery = order.status === 'delivery';
+    renderOrderBatch(container, filtered);
 
-        // Status badge labels
-        const statusLabels = {
-            pending: 'Pending',
-            confirmed: 'Confirmed',
-            rejected: 'Rejected',
-            delivery: '🚚 Out for Delivery',
-            delivered: '✅ Delivered'
-        };
+    // Attach scroll listener for lazy loading
+    removeScrollListener(container);
+    if (state.ordersRendered < filtered.length) {
+        container.addEventListener('scroll', onOrdersScroll);
+    }
+}
 
-        return `
-            <div class="admin-order-row" style="background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-5); margin-bottom: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--color-border); padding-bottom: var(--sp-3); flex-wrap: wrap; gap: var(--sp-2);">
-                    <div>
-                        <strong style="font-size: 1.1rem; color: var(--color-ink);">#${order.id}</strong>
-                        <span style="font-size: .8rem; color: var(--color-text-sub); margin-left: var(--sp-3);">${date}</span>
-                    </div>
-                    <span class="badge badge--${order.status}">${statusLabels[order.status] || order.status}</span>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr; gap: var(--sp-4);" class="order-details-grid">
-                    <!-- Customer Info -->
-                    <div>
-                        <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Customer Info</h4>
-                        <div style="font-size: .9rem; line-height: 1.5;">
-                            <div><strong>Name:</strong> ${order.customer.name}</div>
-                            <div><strong>Email:</strong> ${order.customer.email}</div>
-                            <div><strong>WhatsApp:</strong> <a href="https://wa.me/${order.customer.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #25d366; text-decoration: underline; font-weight: 500;">${order.customer.whatsapp} 💬</a></div>
-                            <div><strong>Location:</strong> ${order.customer.location}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Shirt Details -->
-                    <div>
-                        <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Shirt Details</h4>
-                        <div style="font-size: .9rem; line-height: 1.5;">
-                            <div><strong>Design:</strong> ${order.design.name} (${order.design.id})</div>
-                            <div><strong>Type:</strong> ${order.shirtType === 'custom' ? 'Customized' : 'Plain'}</div>
-                            <div><strong>Size &amp; Qty:</strong> ${order.size} &times; ${order.qty}</div>
-                            ${order.shirtType === 'custom' ? `<div><strong>Back Print:</strong> "${order.customization.name}" (#${order.customization.number || 'None'})</div>` : ''}
-                        </div>
-                    </div>
-                    
-                    <!-- Payment -->
-                    <div>
-                        <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Payment</h4>
-                        <div style="font-size: .9rem; line-height: 1.5; margin-bottom: var(--sp-2);">
-                            <div><strong>Method:</strong> ${order.payment.method === 'bank-transfer' ? 'Bank Transfer' : 'USSD'}</div>
-                            <div><strong>Total:</strong> <strong style="color: var(--color-ink);">${fmt(order.pricing.total)}</strong></div>
-                        </div>
-                        ${order.receipt && order.receipt.dataUrl ? `
-                            <button class="btn btn-secondary btn-sm view-receipt-btn" data-id="${order.id}">
-                                📄 View Receipt
-                            </button>
-                        ` : '<span style="color: var(--color-text-faint); font-size: .85rem;">No Receipt Uploaded</span>'}
-                    </div>
-                </div>
+function renderOrderBatch(container, filtered) {
+    const start = state.ordersRendered;
+    const end = Math.min(start + CONFIG.ORDERS_PER_BATCH, filtered.length);
+    const batch = filtered.slice(start, end);
 
-                <!-- Action Buttons -->
-                ${isPending ? `
-                    <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2); flex-wrap: wrap;">
-                        <button class="btn btn-secondary btn-sm reject-order-btn" data-id="${order.id}" style="color: #dc2626; border-color: #fca5a5;">
-                            ✕ Reject Payment
-                        </button>
-                        <button class="btn btn-primary btn-sm confirm-order-btn" data-id="${order.id}">
-                            ✓ Confirm Order
-                        </button>
-                    </div>
-                ` : ''}
+    const html = batch.map(order => buildOrderHTML(order)).join('');
+    container.insertAdjacentHTML('beforeend', html);
 
-                ${isConfirmed ? `
-                    <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
-                        <button class="btn btn-primary btn-sm delivery-order-btn" data-id="${order.id}" style="background: #1d4ed8;">
-                            🚚 Sent for Delivery
-                        </button>
-                    </div>
-                ` : ''}
+    state.ordersRendered = end;
 
-                ${isDelivery ? `
-                    <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
-                        <button class="btn btn-success btn-sm delivered-order-btn" data-id="${order.id}">
-                            ✅ Mark as Delivered
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
+    // Attach event listeners to new buttons
+    attachOrderEventListeners(container);
 
+    // Show "loading more" indicator if there are more orders
+    if (state.ordersRendered < filtered.length) {
+        const loadMore = document.createElement('div');
+        loadMore.className = 'orders-loading-more';
+        loadMore.innerHTML = '<p style="text-align: center; color: var(--color-text-faint); padding: var(--sp-4);">Scroll for more...</p>';
+        container.appendChild(loadMore);
+    }
+}
+
+function onOrdersScroll(e) {
+    const container = e.target;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+
+    // Check if user scrolled near bottom
+    if (scrollTop + clientHeight >= scrollHeight - CONFIG.SCROLL_THRESHOLD) {
+        if (state.ordersRendered < state.currentFilteredOrders.length) {
+            // Remove previous "scroll for more" message
+            const loadMoreEl = container.querySelector('.orders-loading-more');
+            if (loadMoreEl) loadMoreEl.remove();
+
+            renderOrderBatch(container, state.currentFilteredOrders);
+        }
+    }
+}
+
+function removeScrollListener(container) {
+    container.removeEventListener('scroll', onOrdersScroll);
+}
+
+function attachOrderEventListeners(container) {
     // View Receipt
-    $$('.view-receipt-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const order = state.orders.find(o => o.id === btn.dataset.id);
-            if (order && order.receipt) {
-                const isPdf = order.receipt.type === 'application/pdf';
-                Swal.fire({
-                    title: `Payment Receipt: #${order.id}`,
-                    html: isPdf
-                        ? `<iframe src="${order.receipt.dataUrl}" style="width:100%; height:400px; border:none;"></iframe>`
-                        : `<img src="${order.receipt.dataUrl}" style="max-width:100%; max-height:400px; object-fit:contain; border-radius:8px;" alt="Receipt">`,
-                    showCloseButton: true,
-                    confirmButtonText: 'Download',
-                    confirmButtonColor: '#000000',
-                    showDenyButton: true,
-                    denyButtonText: 'Close',
-                    denyButtonColor: '#9ca3af'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const link = document.createElement('a');
-                        link.href = order.receipt.dataUrl;
-                        link.download = order.receipt.name || `receipt_${order.id}`;
-                        link.click();
-                    }
-                });
-            }
-        });
+    container.querySelectorAll('.view-receipt-btn').forEach(btn => {
+        btn.removeEventListener('click', viewReceiptHandler);
+        btn.addEventListener('click', viewReceiptHandler);
     });
 
-    $$('.confirm-order-btn').forEach(btn => btn.addEventListener('click', () => confirmOrder(btn.dataset.id)));
-    $$('.reject-order-btn').forEach(btn => btn.addEventListener('click', () => rejectOrder(btn.dataset.id)));
-    $$('.delivery-order-btn').forEach(btn => btn.addEventListener('click', () => markDelivery(btn.dataset.id)));
-    $$('.delivered-order-btn').forEach(btn => btn.addEventListener('click', () => markDelivered(btn.dataset.id)));
+    // Confirm, Reject, Delivery, Delivered
+    container.querySelectorAll('.confirm-order-btn').forEach(btn => {
+        btn.removeEventListener('click', confirmOrderHandler);
+        btn.addEventListener('click', confirmOrderHandler);
+    });
+
+    container.querySelectorAll('.reject-order-btn').forEach(btn => {
+        btn.removeEventListener('click', rejectOrderHandler);
+        btn.addEventListener('click', rejectOrderHandler);
+    });
+
+    container.querySelectorAll('.delivery-order-btn').forEach(btn => {
+        btn.removeEventListener('click', markDeliveryHandler);
+        btn.addEventListener('click', markDeliveryHandler);
+    });
+
+    container.querySelectorAll('.delivered-order-btn').forEach(btn => {
+        btn.removeEventListener('click', markDeliveredHandler);
+        btn.addEventListener('click', markDeliveredHandler);
+    });
 }
+
+// Event Handlers (Extracted for cleaner delegation)
+const viewReceiptHandler = async function (e) {
+    const orderId = this.dataset.id;
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order || !order.receipt) return;
+
+    // Show loading while we fetch the receipt on-demand
+    Swal.fire({
+        title: `Loading Receipt #${orderId}…`,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        const res = await fetch(`/api/orders/${orderId}/receipt`, {
+            headers: { 'x-admin-password': state.password }
+        });
+        const data = await res.json();
+
+        if (!data.success || !data.dataUrl) {
+            Swal.fire('Not Found', 'Receipt could not be loaded.', 'warning');
+            return;
+        }
+
+        const isPdf = (data.type || '').includes('pdf');
+        Swal.fire({
+            title: `Payment Receipt: #${orderId}`,
+            html: isPdf
+                ? `<iframe src="${data.dataUrl}" style="width:100%; height:420px; border:none;"></iframe>`
+                : `<img src="${data.dataUrl}" style="max-width:100%; max-height:420px; object-fit:contain; border-radius:8px;" alt="Receipt">`,
+            showCloseButton: true,
+            confirmButtonText: '⬇ Download',
+            confirmButtonColor: '#000000',
+            showDenyButton: true,
+            denyButtonText: 'Close',
+            denyButtonColor: '#9ca3af'
+        }).then(result => {
+            if (result.isConfirmed) {
+                const link = document.createElement('a');
+                link.href = data.dataUrl;
+                link.download = order.receipt.name || `receipt_${orderId}`;
+                link.click();
+            }
+        });
+    } catch (err) {
+        Swal.fire('Error', 'Could not load receipt. Check your connection.', 'error');
+    }
+};
+
+const confirmOrderHandler = function (e) {
+    confirmOrder(this.dataset.id);
+};
+
+const rejectOrderHandler = function (e) {
+    rejectOrder(this.dataset.id);
+};
+
+const markDeliveryHandler = function (e) {
+    markDelivery(this.dataset.id);
+};
+
+const markDeliveredHandler = function (e) {
+    markDelivered(this.dataset.id);
+};
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
 async function confirmOrder(id) {
@@ -342,7 +532,7 @@ async function confirmOrder(id) {
         const data = await res.json();
         if (data.success) {
             Swal.fire('Confirmed! 🎉', `Order #${id} confirmed.`, 'success');
-            loadData();
+            loadData(true); // Force refresh
         } else {
             Swal.fire('Error', data.message || 'Action failed.', 'error');
         }
@@ -371,7 +561,7 @@ async function rejectOrder(id) {
         const data = await res.json();
         if (data.success) {
             Swal.fire('Rejected ⚠️', `Order #${id} marked as rejected.`, 'success');
-            loadData();
+            loadData(true); // Force refresh
         } else {
             Swal.fire('Error', data.message || 'Action failed.', 'error');
         }
@@ -400,7 +590,7 @@ async function markDelivery(id) {
         const data = await res.json();
         if (data.success) {
             Swal.fire('Sent! 🚚', `Order #${id} marked as out for delivery.`, 'success');
-            loadData();
+            loadData(true); // Force refresh
         } else {
             Swal.fire('Error', data.message || 'Action failed.', 'error');
         }
@@ -429,7 +619,7 @@ async function markDelivered(id) {
         const data = await res.json();
         if (data.success) {
             Swal.fire('Delivered! ✅', `Order #${id} marked as delivered.`, 'success');
-            loadData();
+            loadData(true); // Force refresh
         } else {
             Swal.fire('Error', data.message || 'Action failed.', 'error');
         }
@@ -438,14 +628,24 @@ async function markDelivered(id) {
     }
 }
 
-// ─── Filter Pills ────────────────────────────────────────────────────────────
+// ─── Filter Pills (Debounced) ────────────────────────────────────────────────
 function initFilters() {
+    let filterTimeout;
+
     $$('#filter-pills button').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            clearTimeout(filterTimeout);
+
+            // Update UI immediately for responsiveness
             $$('#filter-pills button').forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
             state.filter = e.target.dataset.filter;
-            renderOrders();
+
+            // Debounce the re-render to batch rapid filter changes
+            filterTimeout = setTimeout(() => {
+                state.ordersRendered = 0; // Reset virtual list
+                renderOrders();
+            }, 100);
         });
     });
 }
@@ -468,5 +668,5 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#logout-btn').addEventListener('click', handleLogout);
     initFilters();
     initAdminNav();
-    console.log('📊 Admin dashboard logic ready');
+    console.log('⚡ Admin dashboard ready (optimized for speed)');
 });

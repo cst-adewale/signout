@@ -9,7 +9,11 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // Force Node.js to use Google DNS — fixes MongoDB Atlas SRV resolution on Windows
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (dnsErr) {
+    console.warn('⚠️ Failed to set DNS servers to Google DNS, falling back to system defaults:', dnsErr.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -120,19 +124,54 @@ async function sendMailSafe(mailOptions) {
     }
 }
 
-// ─── MongoDB Connection ───────────────────────────────────────────────────────
-mongoose.connect(process.env.MONGODB_URI)
+// ─── MongoDB Connection (Improved) ────────────────────────────────────────────
+mongoose.connection.on('error', err => {
+    console.error('❌ MongoDB Connection Event Error:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.warn('⚠️ MongoDB disconnected. Attempting to reconnect...');
+});
+
+mongoose.connection.on('connected', () => {
+    console.log('✓ MongoDB connected and ready');
+});
+
+// Check if MONGODB_URI is configured
+if (!process.env.MONGODB_URI) {
+    console.error('❌ MONGODB_URI is not set in .env file');
+    console.error('📝 Add this to your .env:');
+    console.error('MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname?retryWrites=true&w=majority');
+    process.exit(1);
+}
+
+mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 30000,
+    connectTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+    maxPoolSize: 10,
+    minPoolSize: 1,
+    retryWrites: true,
+    w: 'majority',
+    family: 4  // Force IPv4 (helps on Windows / Atlas)
+})
     .then(() => {
         console.log('🚀 MongoDB Atlas Connected Successfully');
 
-        // Add indexes for faster queries
-        Order.collection.createIndex({ status: 1 });
-        Order.collection.createIndex({ 'customer.email': 1 });
-        Order.collection.createIndex({ createdAt: -1 });
-        User.collection.createIndex({ email: 1 }, { unique: true });
+        // Add indexes for faster queries (with error handling)
+        Promise.all([
+            Order.collection.createIndex({ status: 1 }).catch(err => console.warn('⚠️ Index warning:', err.message)),
+            Order.collection.createIndex({ 'customer.email': 1 }).catch(err => console.warn('⚠️ Index warning:', err.message)),
+            Order.collection.createIndex({ createdAt: -1 }).catch(err => console.warn('⚠️ Index warning:', err.message)),
+            User.collection.createIndex({ email: 1 }, { unique: true }).catch(err => console.warn('⚠️ Index warning:', err.message))
+        ]).catch(err => console.warn('⚠️ Some indexes failed to create:', err.message));
     })
     .catch(err => {
-        console.error('❌ MongoDB Connection Error:', err.message);
+        // Log the error but do NOT exit — Mongoose will keep retrying automatically
+        console.error('\n⚠️  Initial MongoDB connection failed (server will keep retrying):');
+        console.error('   ', err.message);
+        console.error('   → Check your IP is whitelisted at cloud.mongodb.com → Network Access');
+        console.error('   → Ensure port 27017 is not blocked by your network/firewall\n');
     });
 
 // ─── Authentication Middleware ────────────────────────────────────────────────
@@ -331,6 +370,8 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     }
 });
 
+// ─── Admin Endpoints ───
+
 // 2. Admin Login Verification
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
@@ -351,11 +392,31 @@ app.get('/api/orders', async (req, res) => {
             return res.status(403).json({ success: false, message: 'Unauthorized access' });
         }
 
-        const orders = await Order.find().sort({ createdAt: -1 });
+        const orders = await Order.find().select('-receipt.dataUrl').sort({ createdAt: -1 });
         res.json({ success: true, orders });
     } catch (err) {
         console.error('Error fetching orders:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error. Failed to fetch orders.' });
+    }
+});
+
+// 3.5 Retrieve Order Receipt (Fetched on-demand for massive speedup)
+app.get('/api/orders/:id/receipt', async (req, res) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        const expected = process.env.ADMIN_PASSWORD || 'admin123';
+        if (password !== expected) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const order = await Order.findOne({ id: req.params.id }).select('receipt.dataUrl receipt.type');
+        if (!order || !order.receipt) {
+            return res.status(404).json({ success: false, message: 'Receipt not found' });
+        }
+        res.json({ success: true, dataUrl: order.receipt.dataUrl, type: order.receipt.type });
+    } catch (err) {
+        console.error('Error fetching receipt:', err);
+        res.status(500).json({ success: false, message: 'Server error. Failed to load receipt.' });
     }
 });
 
@@ -555,7 +616,7 @@ app.get('/api/analytics', async (req, res) => {
             return res.status(403).json({ success: false, message: 'Unauthorized access' });
         }
 
-        const orders = await Order.find();
+        const orders = await Order.find().select('-receipt.dataUrl');
 
         // Calculate counts
         let totalOrders = orders.length;
@@ -607,8 +668,23 @@ app.get('/api/analytics', async (req, res) => {
 
     } catch (err) {
         console.error('Error computing analytics:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error. Failed to compute analytics.' });
     }
+});
+
+// ─── Global Error Handler ────────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+    console.error('🔴 Unhandled Error:', {
+        message: err.message,
+        url: req.url,
+        method: req.method,
+        stack: err.stack
+    });
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 // Wildcard route to serve index.html for undefined requests (so client side links resolve)
@@ -619,4 +695,5 @@ app.get('*', (req, res) => {
 // Start the Express server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📍 Visit: http://localhost:${PORT}`);
 });

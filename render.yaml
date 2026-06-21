@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: signoutshirts
+    runtime: node
+    region: frankfurt           # closest to Nigeria — change to oregon if preferred
+    plan: free                  # upgrade to starter for always-on
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /
+
+    envVars:
+      # ── MongoDB Atlas ──────────────────────────────────────────────────────────
+      - key: MONGODB_URI
+        sync: false             # set manually in Render dashboard
+
+      # ── JWT Secret (generate a strong random string) ───────────────────────────
+      - key: JWT_SECRET
+        generateValue: true     # Render auto-generates a secure value
+
+      # ── Admin Password ─────────────────────────────────────────────────────────
+      - key: ADMIN_PASSWORD
+        sync: false             # set manually in Render dashboard
+
+      # ── Nodemailer / Gmail SMTP ────────────────────────────────────────────────
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false             # your gmail address
+      - key: SMTP_PASS
+        sync: false             # your Gmail App Password (not your real password)
+
+      # ── Runtime ───────────────────────────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"          # Render uses 10000 by default for Node services
+
