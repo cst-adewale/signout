@@ -206,7 +206,7 @@ ol {
     padding: .75rem 1.75rem;
     font-weight: 500;
     font-size: .9375rem;
-    border-radius: var(--r-sm);
+    border-radius: var(--r-md);
     border: 1px solid transparent;
     cursor: pointer;
     transition: var(--t-fast);
@@ -383,9 +383,11 @@ body.dark .order-status-card {
     border-color: var(--color-border);
 }
 
-/* Primary buttons are white in dark mode (because var(--color-ink) is #ffffff).
-   The text on white buttons in dark mode must be black. */
-body.dark .btn-primary {
+/* Primary buttons, place order CTAs, and design tags are white/light-padded in dark mode.
+   Their text must be black to stay readable. */
+body.dark .btn-primary,
+body.dark .nav__cta,
+body.dark .design-tag {
     color: #000000 !important;
 }
 
