@@ -168,6 +168,34 @@ function renderPaymentInfo() {
 
 // ─── Gallery & Modal ──────────────────────────────────────────────────────────
 
+function selectDesign(id, name) {
+    state.designId = id;
+    state.designName = name;
+
+    // Update gallery selection ring
+    $$('.gallery-card').forEach(c =>
+        c.classList.toggle('selected', c.dataset.id === id)
+    );
+
+    // Update form display
+    const display = $('#design-display');
+    if (display) {
+        display.textContent = `✓ ${name} (${id}) selected`;
+        display.classList.add('has-design');
+    }
+
+    const selectEl = $('#selected-design-id');
+    if (selectEl) {
+        selectEl.value = id;
+    }
+
+    // Scroll to order form
+    const orderFormSection = $('#order-form');
+    if (orderFormSection) {
+        orderFormSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 function initGallery() {
     const modal = $('#gallery-modal');
     const modalImg = $('#modal-img');
@@ -177,7 +205,10 @@ function initGallery() {
     const selectBtn = $('#modal-select');
 
     $$('.gallery-card').forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            // If the user clicked the Select Design button inside the card, do not open the preview modal
+            if (e.target.closest('.gallery-select-btn')) return;
+
             const id = card.dataset.id;
             const name = card.dataset.name;
             const src = card.dataset.src;
@@ -195,6 +226,16 @@ function initGallery() {
         });
     });
 
+    // Handle immediate select design button clicks
+    $$('.gallery-select-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const name = btn.dataset.name;
+            selectDesign(id, name);
+        });
+    });
+
     function closeModal() {
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
@@ -209,25 +250,8 @@ function initGallery() {
         const id = selectBtn.dataset.id;
         const name = selectBtn.dataset.name;
 
-        state.designId = id;
-        state.designName = name;
-
-        // Update gallery selection ring
-        $$('.gallery-card').forEach(c =>
-            c.classList.toggle('selected', c.dataset.id === id)
-        );
-
-        // Update form display
-        const display = $('#design-display');
-        display.textContent = `✓ ${name} (${id}) selected`;
-        display.classList.add('has-design');
-
-        $('#selected-design-id').value = id;
-
+        selectDesign(id, name);
         closeModal();
-
-        // Scroll to order form
-        $('#order-form').scrollIntoView({ behavior: 'smooth' });
     });
 }
 
@@ -800,6 +824,7 @@ async function updateUI() {
     const ordersLoggedOut = $('#orders-logged-out');
     const ordersEmpty = $('#orders-empty');
     const ordersGrid = $('#orders-grid');
+    const mainForm = $('#main-form');
 
     if (state.user) {
         // Authenticated State
@@ -807,6 +832,7 @@ async function updateUI() {
         if (navOrdersLink) navOrdersLink.style.display = 'inline-block';
         if (formOverlay) formOverlay.style.display = 'none';
         if (ordersLoggedOut) ordersLoggedOut.style.display = 'none';
+        if (mainForm) mainForm.style.display = 'block';
 
         // Auto-fill Step 7: Your Details
         $('#cust-name').value = state.user.name;
@@ -821,10 +847,11 @@ async function updateUI() {
         // Logged Out State
         authBtn.textContent = 'Sign In';
         if (navOrdersLink) navOrdersLink.style.display = 'none';
-        if (formOverlay) formOverlay.style.display = 'flex';
-        if (ordersLoggedOut) ordersLoggedOut.style.display = 'flex';
+        if (formOverlay) formOverlay.style.display = 'block';
+        if (ordersLoggedOut) ordersLoggedOut.style.display = 'block';
         if (ordersEmpty) ordersEmpty.style.display = 'none';
         if (ordersGrid) ordersGrid.style.display = 'none';
+        if (mainForm) mainForm.style.display = 'none';
 
         // Clear details
         $('#cust-name').value = '';

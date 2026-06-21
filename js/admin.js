@@ -196,13 +196,15 @@ function renderOrders() {
 
         const isPending = order.status === 'pending';
         const isConfirmed = order.status === 'confirmed';
+        const isDelivery = order.status === 'delivery';
 
         // Status badge labels
         const statusLabels = {
             pending: 'Pending',
             confirmed: 'Confirmed',
             rejected: 'Rejected',
-            delivery: '🚚 Out for Delivery'
+            delivery: '🚚 Out for Delivery',
+            delivered: '✅ Delivered'
         };
 
         return `
@@ -272,6 +274,14 @@ function renderOrders() {
                         </button>
                     </div>
                 ` : ''}
+
+                ${isDelivery ? `
+                    <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
+                        <button class="btn btn-success btn-sm delivered-order-btn" data-id="${order.id}">
+                            ✅ Mark as Delivered
+                        </button>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');
@@ -308,6 +318,7 @@ function renderOrders() {
     $$('.confirm-order-btn').forEach(btn => btn.addEventListener('click', () => confirmOrder(btn.dataset.id)));
     $$('.reject-order-btn').forEach(btn => btn.addEventListener('click', () => rejectOrder(btn.dataset.id)));
     $$('.delivery-order-btn').forEach(btn => btn.addEventListener('click', () => markDelivery(btn.dataset.id)));
+    $$('.delivered-order-btn').forEach(btn => btn.addEventListener('click', () => markDelivered(btn.dataset.id)));
 }
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -389,6 +400,35 @@ async function markDelivery(id) {
         const data = await res.json();
         if (data.success) {
             Swal.fire('Sent! 🚚', `Order #${id} marked as out for delivery.`, 'success');
+            loadData();
+        } else {
+            Swal.fire('Error', data.message || 'Action failed.', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', 'Server connection error.', 'error');
+    }
+}
+
+async function markDelivered(id) {
+    const result = await Swal.fire({
+        title: 'Mark as Delivered?',
+        text: `Mark order #${id} as delivered?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: '✅ Yes, Mark as Delivered!'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await fetch(`/api/orders/${id}/delivered`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': state.password }
+        });
+        const data = await res.json();
+        if (data.success) {
+            Swal.fire('Delivered! ✅', `Order #${id} marked as delivered.`, 'success');
             loadData();
         } else {
             Swal.fire('Error', data.message || 'Action failed.', 'error');

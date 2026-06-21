@@ -71,7 +71,7 @@ const OrderSchema = new mongoose.Schema({
         whatsapp: { type: String, required: true },
         location: { type: String, required: true }
     },
-    status: { type: String, default: 'pending', enum: ['pending', 'confirmed', 'rejected', 'delivery'] }
+    status: { type: String, default: 'pending', enum: ['pending', 'confirmed', 'rejected', 'delivery', 'delivered'] }
 });
 
 const Order = mongoose.model('Order', OrderSchema);
@@ -503,6 +503,49 @@ app.post('/api/orders/:id/delivery', async (req, res) => {
     }
 });
 
+// 6.5 Mark Order as Delivered
+app.post('/api/orders/:id/delivered', async (req, res) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        const expected = process.env.ADMIN_PASSWORD || 'admin123';
+        if (password !== expected) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const order = await Order.findOne({ id: req.params.id });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        order.status = 'delivered';
+        await order.save();
+
+        res.json({ success: true, message: 'Order marked as delivered', order });
+
+        // Notify student their shirt has been delivered
+        const mailOptions = {
+            from: `"Signoutshirts Store" <${process.env.SMTP_USER || 'system@signoutshirts.com'}>`,
+            to: order.customer.email,
+            subject: `🎉 Order Delivered! — Signoutshirts #${order.id}`,
+            text: `Hi ${order.customer.name},\n\nYour sign-out shirt order #${order.id} has been successfully delivered!\n\nThank you for choosing Signoutshirts!`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px;">
+                    <h2 style="color: #059669; text-align: center;">Order Delivered! 🎉</h2>
+                    <p>Hi <strong>${order.customer.name}</strong>,</p>
+                    <p>Your sign-out shirt order <strong>#${order.id}</strong> has been successfully delivered to <strong>${order.customer.location}</strong>.</p>
+                    <p>Thank you for ordering with Signoutshirts! We hope you love your new shirt.</p>
+                    <p style="margin-top: 30px; font-size: 0.9em; color: #718096; text-align: center;">&copy; 2026 Signoutshirts. All rights reserved.</p>
+                </div>
+            `
+        };
+        sendMailSafe(mailOptions);
+
+    } catch (err) {
+        console.error('Error marking order as delivered:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // 7. Analytics API
 app.get('/api/analytics', async (req, res) => {
     try {
@@ -527,7 +570,7 @@ app.get('/api/analytics', async (req, res) => {
 
         orders.forEach(order => {
             if (order.status === 'pending') pending++;
-            if (order.status === 'confirmed') {
+            if (['confirmed', 'delivery', 'delivered'].includes(order.status)) {
                 confirmed++;
                 totalRevenue += order.pricing.total;
             }

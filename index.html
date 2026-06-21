@@ -121,6 +121,7 @@
                         <div class="gallery-card__foot">
                             <span class="design-tag">D01</span>
                             <span class="gallery-card__name">Classic Emblem 2026</span>
+                            <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="D01" data-name="Classic Emblem 2026">Select Design</button>
                         </div>
                     </div>
                     <div class="gallery-card" data-id="D02" data-name="Minimalist Alumni"
@@ -133,6 +134,7 @@
                         <div class="gallery-card__foot">
                             <span class="design-tag">D02</span>
                             <span class="gallery-card__name">Minimalist Alumni</span>
+                            <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="D02" data-name="Minimalist Alumni">Select Design</button>
                         </div>
                     </div>
                     <div class="gallery-card" data-id="D03" data-name="Senior Crest" data-src="assets/design-d03.png">
@@ -144,6 +146,7 @@
                         <div class="gallery-card__foot">
                             <span class="design-tag">D03</span>
                             <span class="gallery-card__name">Senior Crest</span>
+                            <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="D03" data-name="Senior Crest">Select Design</button>
                         </div>
                     </div>
                     <div class="gallery-card" data-id="D04" data-name="Vertical Signout Typo"
@@ -156,6 +159,7 @@
                         <div class="gallery-card__foot">
                             <span class="design-tag">D04</span>
                             <span class="gallery-card__name">Vertical Signout Typo</span>
+                            <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="D04" data-name="Vertical Signout Typo">Select Design</button>
                         </div>
                     </div>
                 </div>
@@ -186,53 +190,70 @@
             <div class="modal" role="dialog" style="max-width: 480px;">
                 <button class="modal__close" id="auth-modal-close" aria-label="Close">&times;</button>
                 <div class="modal__body" style="display: block; padding: 2.5rem;">
-                    
+
                     <!-- Login Form -->
                     <div id="login-form-container">
                         <h3 class="t-md" style="margin-bottom: 0.5rem; text-align: center;">Welcome Back</h3>
-                        <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Sign in to track and place your orders.</p>
+                        <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Sign in to track and
+                            place your orders.</p>
                         <form id="login-form" novalidate>
                             <div class="form-group" style="margin-bottom: 1.2rem;">
-                                <label class="form-label" for="login-email">Email Address <span class="req">*</span></label>
-                                <input type="email" id="login-email" class="form-input" placeholder="you@email.com" required>
+                                <label class="form-label" for="login-email">Email Address <span
+                                        class="req">*</span></label>
+                                <input type="email" id="login-email" class="form-input" placeholder="you@email.com"
+                                    required>
                             </div>
                             <div class="form-group" style="margin-bottom: 1.5rem;">
-                                <label class="form-label" for="login-password">Password <span class="req">*</span></label>
-                                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+                                <label class="form-label" for="login-password">Password <span
+                                        class="req">*</span></label>
+                                <input type="password" id="login-password" class="form-input" placeholder="••••••••"
+                                    required>
                             </div>
                             <button type="submit" class="btn btn-primary w-full" id="login-submit-btn">Sign In</button>
                         </form>
                         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
-                            New to Signoutshirts? <a href="#" id="switch-to-signup" class="form-link">Create an account</a>
+                            New to Signoutshirts? <a href="#" id="switch-to-signup" class="form-link">Create an
+                                account</a>
                         </p>
                     </div>
 
                     <!-- Signup Form -->
                     <div id="signup-form-container" style="display: none;">
                         <h3 class="t-md" style="margin-bottom: 0.5rem; text-align: center;">Create Account</h3>
-                        <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Register to place and track your orders.</p>
+                        <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Register to place and
+                            track your orders.</p>
                         <form id="signup-form" novalidate>
                             <div class="form-group" style="margin-bottom: 1rem;">
                                 <label class="form-label" for="signup-name">Full Name <span class="req">*</span></label>
-                                <input type="text" id="signup-name" class="form-input" placeholder="Your full name" required>
+                                <input type="text" id="signup-name" class="form-input" placeholder="Your full name"
+                                    required>
                             </div>
                             <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label" for="signup-email">Email Address <span class="req">*</span></label>
-                                <input type="email" id="signup-email" class="form-input" placeholder="you@email.com" required>
+                                <label class="form-label" for="signup-email">Email Address <span
+                                        class="req">*</span></label>
+                                <input type="email" id="signup-email" class="form-input" placeholder="you@email.com"
+                                    required>
                             </div>
                             <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label" for="signup-whatsapp">WhatsApp Number <span class="req">*</span></label>
-                                <input type="tel" id="signup-whatsapp" class="form-input" placeholder="+234..." required>
+                                <label class="form-label" for="signup-whatsapp">WhatsApp Number <span
+                                        class="req">*</span></label>
+                                <input type="tel" id="signup-whatsapp" class="form-input" placeholder="+234..."
+                                    required>
                             </div>
                             <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label" for="signup-location">Delivery Location <span class="req">*</span></label>
-                                <input type="text" id="signup-location" class="form-input" placeholder="e.g., Yaba, Lagos" required>
+                                <label class="form-label" for="signup-location">Delivery Location <span
+                                        class="req">*</span></label>
+                                <input type="text" id="signup-location" class="form-input"
+                                    placeholder="e.g., Yaba, Lagos" required>
                             </div>
                             <div class="form-group" style="margin-bottom: 1.5rem;">
-                                <label class="form-label" for="signup-password">Password <span class="req">*</span></label>
-                                <input type="password" id="signup-password" class="form-input" placeholder="Min 6 characters" required>
+                                <label class="form-label" for="signup-password">Password <span
+                                        class="req">*</span></label>
+                                <input type="password" id="signup-password" class="form-input"
+                                    placeholder="Min 6 characters" required>
                             </div>
-                            <button type="submit" class="btn btn-primary w-full" id="signup-submit-btn">Create Account</button>
+                            <button type="submit" class="btn btn-primary w-full" id="signup-submit-btn">Create
+                                Account</button>
                         </form>
                         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
                             Already have an account? <a href="#" id="switch-to-login" class="form-link">Sign In</a>
@@ -251,14 +272,12 @@
                     <p class="text-sub">Fill in each step below and submit your order with proof of payment.</p>
                 </div>
 
-                <!-- Form Logged Out Overlay -->
-                <div id="form-logged-out-overlay" class="form-overlay-block" style="display: flex;">
-                    <div class="form-overlay-block__content">
-                        <span style="font-size: 3rem;">🔒</span>
-                        <h3 class="t-md" style="margin: 1rem 0 0.5rem 0;">Sign In to Order</h3>
-                        <p class="text-sub" style="margin-bottom: 1.5rem;">Please log in or create an account to customize and place your order.</p>
-                        <button type="button" class="btn btn-primary" id="form-login-btn">Sign In Now</button>
-                    </div>
+                <!-- Form Logged Out Block -->
+                <div id="form-logged-out-overlay" class="empty-state" style="display: block; margin-bottom: 2rem;">
+                    <div class="empty-state__icon">🔒</div>
+                    <h3 class="empty-state__title">Sign In to Order</h3>
+                    <p class="empty-state__msg">Please log in or create an account to customize and place your order.</p>
+                    <button type="button" class="btn btn-primary" id="form-login-btn">Sign In Now</button>
                 </div>
 
                 <form id="main-form" class="order-form-wrapper" novalidate>
@@ -520,10 +539,11 @@
                     <h2 class="t-lg">My Orders</h2>
                     <p class="text-sub">Track the status of your placed orders.</p>
                 </div>
-                <div id="orders-logged-out" class="empty-state" style="display: flex;">
+                <div id="orders-logged-out" class="empty-state" style="display: block;">
                     <div class="empty-state__icon">🔒</div>
                     <h3 class="empty-state__title">Sign In to Track Orders</h3>
-                    <p class="empty-state__msg">You need to sign in to see your active order status and delivery updates.</p>
+                    <p class="empty-state__msg">You need to sign in to see your active order status and delivery
+                        updates.</p>
                     <button class="btn btn-primary" id="orders-login-btn">Sign In Now</button>
                 </div>
                 <div id="orders-empty" class="empty-state" style="display: none;">
@@ -546,8 +566,8 @@
             </div>
             <div class="footer-col">
                 <h4>Get In Touch</h4>
-                <a href="https://wa.me/2348000000000" target="_blank">WhatsApp</a>
-                <a href="https://snapchat.com/add/signoutshirts" target="_blank">Snapchat</a>
+                <a href="https://wa.me/+234" target="_blank">WhatsApp</a>
+                <a href="pappymedia01@gmail.com" target="_blank">Email</a>
             </div>
         </div>
         <div class="site-footer__bottom">

@@ -167,6 +167,7 @@
 .gallery-card__foot {
     padding: var(--sp-4);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--sp-2);
 }
@@ -191,6 +192,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+}
+
+.gallery-select-btn {
+    width: 100%;
+    margin-top: var(--sp-2);
 }
 
 /* ==========================================================================
@@ -799,6 +806,16 @@
 .badge--rejected {
     background: #fee2e2;
     color: #991b1b;
+}
+
+.badge--delivery {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge--delivered {
+    background: var(--color-success-bg);
+    color: var(--color-success);
 }
 
 /* ==========================================================================
