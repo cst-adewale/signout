@@ -210,6 +210,7 @@
                         <span class="nav__link" style="color: var(--color-text-faint); font-size:.8rem; pointer-events:none; cursor:default;">Admin Panel</span>
                         <a href="index.html" class="nav__link">← Back to Store</a>
                         <button class="nav__link" id="logout-btn" style="background:none;border:none;cursor:pointer;color:var(--color-text-sub);font-size:.9375rem;font-weight:500;text-align:left;padding:0;">Sign Out</button>
+                        <button class="btn" id="wipe-db-btn" style="background:#dc2626;color:#fff;border:none;font-size:.85rem;padding:.35rem .9rem;border-radius:var(--r-md);cursor:pointer;" title="Wipe entire database">🗑 Wipe DB</button>
                     </div>
                 </nav>
             </div>
@@ -279,6 +280,42 @@
             </div>
 
         </main>
+    </div>
+
+    <!-- ================================================================
+         Wipe DB — Modal 1: Warning
+    ================================================================ -->
+    <div id="wipe-warn-modal" class="modal-overlay" aria-hidden="true" style="z-index:10000;">
+        <div class="modal" role="dialog" style="max-width:480px;">
+            <div class="modal__body" style="display:block;padding:2.5rem;text-align:center;">
+                <div style="font-size:3rem;margin-bottom:1rem;">⚠️</div>
+                <h3 class="t-md" style="color:#dc2626;margin-bottom:.75rem;">Danger Zone</h3>
+                <p style="margin-bottom:1.5rem;line-height:1.6;">You are about to <strong>permanently delete all orders and users</strong> from the database. This action <strong>cannot be undone.</strong></p>
+                <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+                    <button id="wipe-warn-cancel" class="btn btn-secondary">Cancel</button>
+                    <button id="wipe-warn-proceed" class="btn" style="background:#dc2626;color:#fff;">Yes, I understand — Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         Wipe DB — Modal 2: Type to confirm
+    ================================================================ -->
+    <div id="wipe-confirm-modal" class="modal-overlay" aria-hidden="true" style="z-index:10001;">
+        <div class="modal" role="dialog" style="max-width:480px;">
+            <div class="modal__body" style="display:block;padding:2.5rem;">
+                <h3 class="t-md" style="margin-bottom:.5rem;">Confirm Database Wipe</h3>
+                <p style="margin-bottom:1.25rem;color:var(--color-text-sub);">Type <strong style="color:#dc2626;">delete database</strong> below to enable the delete button.</p>
+                <input id="wipe-confirm-input" type="text" class="form-input" placeholder="delete database" autocomplete="off"
+                    style="width:100%;margin-bottom:1.5rem;" />
+                <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+                    <button id="wipe-confirm-cancel" class="btn btn-secondary">Cancel</button>
+                    <button id="wipe-confirm-delete" class="btn" disabled
+                        style="background:#dc2626;color:#fff;opacity:.4;cursor:not-allowed;transition:opacity .2s;">Delete Everything</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
