@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Signoutshirts Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        body { background: var(--color-bg-soft); }
+
+        .chart-bar-wrap { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-2) 0; }
+        .chart-bar-row { display: flex; align-items: center; gap: var(--sp-4); font-size: .875rem; }
+        .chart-bar-label { width: 80px; flex-shrink: 0; color: var(--color-text-sub); }
+        .chart-bar-track { flex: 1; height: 10px; background: var(--color-bg-muted); border-radius: var(--r-full); overflow: hidden; }
+        .chart-bar-fill { height: 100%; background: var(--color-ink); border-radius: var(--r-full); transition: width .6s ease; }
+        .chart-bar-count { min-width: 28px; text-align: right; font-weight: 600; }
+
+        .analytics-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-4); }
+        @media (min-width: 768px) { .analytics-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .analytics-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-6); }
+        .analytics-card__title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-faint); margin-bottom: var(--sp-5); }
+
+        .locked-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: var(--sp-8); background: var(--color-bg); }
+        .locked-screen__icon { font-size: 4rem; margin-bottom: var(--sp-6); }
+        .locked-screen__title { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--sp-2); }
+        .locked-screen__sub { color: var(--color-text-sub); margin-bottom: var(--sp-8); }
+
+        .admin-main { max-width: var(--max-w); margin: 0 auto; padding: var(--sp-8) var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-8); }
+
+        .badge--delivery { background: #dbeafe; color: #1d4ed8; }
+
+        @media (min-width: 768px) { .order-details-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Locked state shown until login -->
+    <div id="locked-screen" class="locked-screen">
+        <div class="locked-screen__icon">🔐</div>
+        <h1 class="locked-screen__title">Admin Access</h1>
+        <p class="locked-screen__sub">Enter your password to access the Signoutshirts admin dashboard.</p>
+        <button class="btn btn-primary" id="login-btn">Enter Password</button>
+    </div>
+
+    <!-- Admin dashboard (hidden until authenticated) -->
+    <div id="admin-app" style="display:none;">
+
+        <!-- Header — same style as main site -->
+        <header class="site-header">
+            <div class="site-header__inner">
+                <a href="index.html" class="logo">SIGNOUTSHIRTS.</a>
+                <nav class="nav">
+                    <button class="nav__toggle" id="admin-nav-toggle" aria-label="Toggle menu">
+                        <span></span><span></span><span></span>
+                    </button>
+                    <div class="nav__links" id="admin-nav-links">
+                        <span class="nav__link" style="color: var(--color-text-faint); font-size:.8rem; pointer-events:none; cursor:default;">Admin Panel</span>
+                        <a href="index.html" class="nav__link">← Back to Store</a>
+                        <button class="nav__link" id="logout-btn" style="background:none;border:none;cursor:pointer;color:var(--color-text-sub);font-size:.9375rem;font-weight:500;text-align:left;padding:0;">Sign Out</button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main class="admin-main">
+
+            <!-- Stats Row -->
+            <div class="stats-row" id="stats-row">
+                <div class="stat-card">
+                    <div class="stat-card__number" id="stat-total">0</div>
+                    <div class="stat-card__label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__number" id="stat-pending">0</div>
+                    <div class="stat-card__label">Pending Review</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__number" id="stat-confirmed">0</div>
+                    <div class="stat-card__label">Confirmed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__number" id="stat-revenue">₦0</div>
+                    <div class="stat-card__label">Confirmed Revenue</div>
+                </div>
+            </div>
+
+            <!-- Analytics Charts -->
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <div class="analytics-card__title">Orders by Design</div>
+                    <div class="chart-bar-wrap" id="chart-designs"></div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card__title">Orders by Size</div>
+                    <div class="chart-bar-wrap" id="chart-sizes"></div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card__title">Shirt Type Breakdown</div>
+                    <div class="chart-bar-wrap" id="chart-types"></div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card__title">Payment Methods</div>
+                    <div class="chart-bar-wrap" id="chart-payments"></div>
+                </div>
+            </div>
+
+            <!-- Orders Panel -->
+            <div class="admin-panel">
+                <div class="admin-panel__head">
+                    <div>
+                        <h2 class="t-md" style="margin-bottom:.25rem;">Orders</h2>
+                        <p class="t-xs text-sub">Review receipts and confirm or reject each order.</p>
+                    </div>
+                    <div class="filter-pills" id="filter-pills">
+                        <button class="filter-pill active" data-filter="all">All</button>
+                        <button class="filter-pill" data-filter="pending">Pending</button>
+                        <button class="filter-pill" data-filter="confirmed">Confirmed</button>
+                        <button class="filter-pill" data-filter="delivery">On Delivery</button>
+                        <button class="filter-pill" data-filter="rejected">Rejected</button>
+                    </div>
+                </div>
+                <div class="admin-orders-list" id="admin-orders-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

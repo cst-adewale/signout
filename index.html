@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signoutshirts | Class of 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a href="#" class="logo">SIGNOUTSHIRTS.</a>
+            <nav class="nav">
+                <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="nav__links" id="nav-links">
+                    <a href="#shirt-info" class="nav__link">T-Shirts</a>
+                    <a href="#gallery" class="nav__link">Designs</a>
+                    <a href="#my-orders" class="nav__link" id="nav-orders-link" style="display: none;">My Orders</a>
+                    <a href="#" class="nav__link" id="auth-btn">Sign In</a>
+                    <a href="#order-form" class="nav__cta">Place Order</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero -->
+        <section class="hero">
+            <div class="container hero__inner">
+                <span class="hero__badge">Class of 2026</span>
+                <h1 class="t-xl hero__title">Order Your Sign-Out Shirt</h1>
+                <p class="hero__sub">Pick your design, choose your size, pay, and we handle the rest.</p>
+                <div class="hero__actions">
+                    <a href="#order-form" class="btn btn-primary">Place Order</a>
+                    <a href="#gallery" class="btn btn-secondary">See Designs</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shirt Types -->
+        <section id="shirt-info" class="section shirt-info">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="t-lg">Choose Your Style</h2>
+                    <p class="text-sub">Two options, same premium cotton.</p>
+                </div>
+                <div class="shirt-grid">
+                    <div class="shirt-card">
+                        <div class="shirt-card__img-wrap">
+                            <img src="assets/plain-shirt.png" alt="Plain White T-Shirt">
+                        </div>
+                        <div class="shirt-card__body">
+                            <div class="shirt-card__meta">
+                                <h3 class="shirt-card__name">Plain White T-Shirt</h3>
+                                <span class="shirt-card__price">₦5,000</span>
+                            </div>
+                            <p class="shirt-card__desc">Premium heavy cotton crewneck. Clean, classic, no customization.
+                            </p>
+                            <ul class="shirt-card__features">
+                                <li>100% Premium Cotton</li>
+                                <li>Classic Fit</li>
+                                <li>No back print</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="shirt-card">
+                        <div class="shirt-card__img-wrap">
+                            <img src="assets/custom-shirt.png" alt="Customized White T-Shirt">
+                        </div>
+                        <div class="shirt-card__body">
+                            <div class="shirt-card__meta">
+                                <h3 class="shirt-card__name">Customized White T-Shirt</h3>
+                                <span class="shirt-card__price">₦6,000</span>
+                            </div>
+                            <p class="shirt-card__desc">Front graphic + optional name and number printed on the back.
+                            </p>
+                            <ul class="shirt-card__features">
+                                <li>100% Premium Cotton</li>
+                                <li>Gallery design print</li>
+                                <li>Optional name &amp; number</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-banner">
+                    <span>ℹ</span>
+                    <p>Name and number on the back are completely optional.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Design Gallery -->
+        <section id="gallery" class="section gallery">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="t-lg">Available Designs</h2>
+                    <p class="text-sub">Click any design to preview and select it for your order.</p>
+                </div>
+                <div class="gallery-grid">
+                    <div class="gallery-card" data-id="D01" data-name="Classic Emblem 2026"
+                        data-src="assets/design-d01.png">
+                        <div class="gallery-card__img-wrap">
+                            <img src="assets/design-d01.png" alt="Design D01">
+                            <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span>
+                            </div>
+                        </div>
+                        <div class="gallery-card__foot">
+                            <span class="design-tag">D01</span>
+                            <span class="gallery-card__name">Classic Emblem 2026</span>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-id="D02" data-name="Minimalist Alumni"
+                        data-src="assets/design-d02.png">
+                        <div class="gallery-card__img-wrap">
+                            <img src="assets/design-d02.png" alt="Design D02">
+                            <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span>
+                            </div>
+                        </div>
+                        <div class="gallery-card__foot">
+                            <span class="design-tag">D02</span>
+                            <span class="gallery-card__name">Minimalist Alumni</span>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-id="D03" data-name="Senior Crest" data-src="assets/design-d03.png">
+                        <div class="gallery-card__img-wrap">
+                            <img src="assets/design-d03.png" alt="Design D03">
+                            <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span>
+                            </div>
+                        </div>
+                        <div class="gallery-card__foot">
+                            <span class="design-tag">D03</span>
+                            <span class="gallery-card__name">Senior Crest</span>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-id="D04" data-name="Vertical Signout Typo"
+                        data-src="assets/design-d04.png">
+                        <div class="gallery-card__img-wrap">
+                            <img src="assets/design-d04.png" alt="Design D04">
+                            <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span>
+                            </div>
+                        </div>
+                        <div class="gallery-card__foot">
+                            <span class="design-tag">D04</span>
+                            <span class="gallery-card__name">Vertical Signout Typo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Design Lightbox Modal -->
+        <div id="gallery-modal" class="modal-overlay" aria-hidden="true">
+            <div class="modal" role="dialog">
+                <button class="modal__close" id="modal-close" aria-label="Close">&times;</button>
+                <div class="modal__body">
+                    <div class="modal__img-col">
+                        <img id="modal-img" src="" alt="">
+                    </div>
+                    <div class="modal__info-col">
+                        <span id="modal-tag" class="design-tag">D01</span>
+                        <h3 id="modal-name" class="t-md" style="margin-top: .5rem;">Design Name</h3>
+                        <p class="modal__desc">Premium screen-printed front graphic. Pairs perfectly with name &amp;
+                            number back print if you choose the customized option.</p>
+                        <button id="modal-select" class="btn btn-primary w-full">Select This Design</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Modal (Sign In / Register) -->
+        <div id="auth-modal" class="modal-overlay" aria-hidden="true">
+            <div class="modal" role="dialog" style="max-width: 480px;">
+                <button class="modal__close" id="auth-modal-close" aria-label="Close">&times;</button>
+                <div class="modal__body" style="display: block; padding: 2.5rem;">
+                    
+                    <!-- Login Form -->
+                    <div id="login-form-container">
+                        <h3 class="t-md" style="margin-bottom: 0.5rem; text-align: center;">Welcome Back</h3>
+                        <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Sign in to track and place your orders.</p>
+                        <form id="login-form" novalidate>
+                            <div class="form-group" style="margin-bottom: 1.2rem;">
+                                <label class="form-label" for="login-email">Email Address <span class="req">*</span></label>
+                                <input type="email" id="login-email" class="form-input" placeholder="you@email.com" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label class="form-label" for="login-password">Password <span class="req">*</span></label>
+                                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full" id="login-submit-btn">Sign In</button>
+                        </form>
+                        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                            New to Signoutshirts? <a href="#" id="switch-to-signup" class="form-link">Create an account</a>
+                        </p>
+                    </div>
+
+                    <!-- Signup Form -->
+                    <div id="signup-form-container" style="display: none;">
+                        <h3 class="t-md" style="margin-bottom: 0.5rem; text-align: center;">Create Account</h3>
+                        <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Register to place and track your orders.</p>
+                        <form id="signup-form" novalidate>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label" for="signup-name">Full Name <span class="req">*</span></label>
+                                <input type="text" id="signup-name" class="form-input" placeholder="Your full name" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label" for="signup-email">Email Address <span class="req">*</span></label>
+                                <input type="email" id="signup-email" class="form-input" placeholder="you@email.com" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label" for="signup-whatsapp">WhatsApp Number <span class="req">*</span></label>
+                                <input type="tel" id="signup-whatsapp" class="form-input" placeholder="+234..." required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label" for="signup-location">Delivery Location <span class="req">*</span></label>
+                                <input type="text" id="signup-location" class="form-input" placeholder="e.g., Yaba, Lagos" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label class="form-label" for="signup-password">Password <span class="req">*</span></label>
+                                <input type="password" id="signup-password" class="form-input" placeholder="Min 6 characters" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full" id="signup-submit-btn">Create Account</button>
+                        </form>
+                        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                            Already have an account? <a href="#" id="switch-to-login" class="form-link">Sign In</a>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Form -->
+        <section id="order-form" class="section order-section">
+            <div class="container" style="position: relative;">
+                <div class="section-header">
+                    <h2 class="t-lg">Place Your Order</h2>
+                    <p class="text-sub">Fill in each step below and submit your order with proof of payment.</p>
+                </div>
+
+                <!-- Form Logged Out Overlay -->
+                <div id="form-logged-out-overlay" class="form-overlay-block" style="display: flex;">
+                    <div class="form-overlay-block__content">
+                        <span style="font-size: 3rem;">🔒</span>
+                        <h3 class="t-md" style="margin: 1rem 0 0.5rem 0;">Sign In to Order</h3>
+                        <p class="text-sub" style="margin-bottom: 1.5rem;">Please log in or create an account to customize and place your order.</p>
+                        <button type="button" class="btn btn-primary" id="form-login-btn">Sign In Now</button>
+                    </div>
+                </div>
+
+                <form id="main-form" class="order-form-wrapper" novalidate>
+                    <!-- 1. Shirt Type -->
+                    <div class="form-block">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 1</div>
+                            <div class="form-block__title">Select Shirt Type</div>
+                        </div>
+                        <div class="form-block__body">
+                            <div class="payment-options">
+                                <label class="payment-option">
+                                    <input type="radio" name="shirt-type" value="plain" checked>
+                                    <span class="payment-option__card">
+                                        <span class="payment-option__icon">👕</span>
+                                        <span class="payment-option__label">
+                                            <span class="t-sm">Plain White T-Shirt</span>
+                                            <span class="t-xs">₦5,000 per shirt</span>
+                                        </span>
+                                    </span>
+                                </label>
+                                <label class="payment-option">
+                                    <input type="radio" name="shirt-type" value="custom">
+                                    <span class="payment-option__card">
+                                        <span class="payment-option__icon">🎨</span>
+                                        <span class="payment-option__label">
+                                            <span class="t-sm">Customized T-Shirt</span>
+                                            <span class="t-xs">₦6,000 per shirt</span>
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Design -->
+                    <div class="form-block">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 2</div>
+                            <div class="form-block__title">Select a Design</div>
+                        </div>
+                        <div class="form-block__body">
+                            <input type="hidden" id="selected-design-id" required>
+                            <div class="design-display" id="design-display">
+                                No design selected — <a href="#gallery" class="form-link">browse above</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Size & Quantity -->
+                    <div class="form-block">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 3</div>
+                            <div class="form-block__title">Size &amp; Quantity</div>
+                        </div>
+                        <div class="form-block__body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="size-select">
+                                        Size <span class="req">*</span>
+                                    </label>
+                                    <select id="size-select" class="form-select" required>
+                                        <option value="">Choose size...</option>
+                                        <option value="XS">Extra Small (XS)</option>
+                                        <option value="S">Small (S)</option>
+                                        <option value="M">Medium (M)</option>
+                                        <option value="L">Large (L)</option>
+                                        <option value="XL">Extra Large (XL)</option>
+                                        <option value="XXL">2XL</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Quantity <span class="req">*</span></label>
+                                    <div class="qty-stepper">
+                                        <button type="button" class="qty-stepper__btn" id="qty-dec">−</button>
+                                        <input type="number" id="qty-input" class="qty-stepper__input" value="1" min="1"
+                                            max="100" required>
+                                        <button type="button" class="qty-stepper__btn" id="qty-inc">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bulk Discount -->
+                            <div class="bulk-banner" id="bulk-banner" style="margin-top:1rem;">
+                                <span class="bulk-banner__badge">10% OFF</span>
+                                <span class="bulk-banner__text">Bulk discount applied for 5+ shirts!</span>
+                            </div>
+
+                            <!-- Pricing Summary -->
+                            <div class="price-box" style="margin-top:1.5rem;">
+                                <div class="price-row" id="price-unit-row">
+                                    <span class="price-row__label">Unit Price</span>
+                                    <span class="price-row__value" id="price-unit">₦5,000</span>
+                                </div>
+                                <div class="price-row price-row--strikethrough" id="price-original-row"
+                                    style="display:none;">
+                                    <span class="price-row__label">Original Total</span>
+                                    <span class="price-row__value" id="price-original"></span>
+                                </div>
+                                <div class="price-row price-row--discount" id="price-discount-row"
+                                    style="display:none;">
+                                    <span class="price-row__label">Discount (10%)</span>
+                                    <span class="price-row__value" id="price-discount"></span>
+                                </div>
+                                <div class="price-divider"></div>
+                                <div class="price-row price-row--total">
+                                    <span class="price-row__label">Total</span>
+                                    <span class="price-row__value" id="price-total">₦5,000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Personalization (custom only) -->
+                    <div class="form-block" id="custom-section" style="display:none;">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 4 — Optional</div>
+                            <div class="form-block__title">Back Print Personalization</div>
+                        </div>
+                        <div class="form-block__body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="custom-name">Name on Back</label>
+                                    <input type="text" id="custom-name" class="form-input" placeholder="e.g., JOHN DOE"
+                                        maxlength="20">
+                                    <span class="form-hint">Leave blank for design only</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="custom-number">Number on Back</label>
+                                    <input type="text" id="custom-number" class="form-input" placeholder="e.g., 23"
+                                        maxlength="3">
+                                    <span class="form-hint">Numbers only, optional</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Payment Method -->
+                    <div class="form-block">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 5</div>
+                            <div class="form-block__title">Payment Method</div>
+                        </div>
+                        <div class="form-block__body">
+                            <div class="payment-options">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment-method" value="bank-transfer" checked>
+                                    <span class="payment-option__card">
+                                        <span class="payment-option__icon">🏦</span>
+                                        <span class="payment-option__label">
+                                            <span class="t-sm">Bank Transfer</span>
+                                            <span class="t-xs">Direct to account</span>
+                                        </span>
+                                    </span>
+                                </label>
+                                <label class="payment-option">
+                                    <input type="radio" name="payment-method" value="ussd">
+                                    <span class="payment-option__card">
+                                        <span class="payment-option__icon">📱</span>
+                                        <span class="payment-option__label">
+                                            <span class="t-sm">USSD Transfer</span>
+                                            <span class="t-xs">Mobile banking</span>
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                            <!-- Dynamic payment details -->
+                            <div id="payment-info-box" class="payment-info-box" style="margin-top:1rem;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Receipt Upload -->
+                    <div class="form-block">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 6</div>
+                            <div class="form-block__title">Upload Payment Receipt</div>
+                        </div>
+                        <div class="form-block__body">
+                            <div class="file-upload">
+                                <input type="file" id="receipt-input" class="file-upload__input" accept="image/*,.pdf">
+                                <label for="receipt-input" class="file-upload__zone">
+                                    <span class="file-upload__icon">📎</span>
+                                    <span class="file-upload__title">Click to upload receipt</span>
+                                    <span class="file-upload__sub">PNG, JPG or PDF — Max 5MB</span>
+                                </label>
+                                <div class="file-preview" id="file-preview">
+                                    <div class="file-preview__icon" id="preview-icon">🖼️</div>
+                                    <div>
+                                        <div class="file-preview__name" id="preview-name"></div>
+                                        <div class="file-preview__size" id="preview-size"></div>
+                                    </div>
+                                    <button type="button" class="file-preview__remove" id="remove-file">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Your Details -->
+                    <div class="form-block">
+                        <div class="form-block__head">
+                            <div class="form-block__step">Step 7</div>
+                            <div class="form-block__title">Your Details</div>
+                        </div>
+                        <div class="form-block__body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="cust-name">Full Name <span
+                                            class="req">*</span></label>
+                                    <input type="text" id="cust-name" class="form-input" placeholder="Your full name"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cust-email">Email Address <span
+                                            class="req">*</span></label>
+                                    <input type="email" id="cust-email" class="form-input" placeholder="you@email.com"
+                                        required>
+                                    <span class="form-hint">Confirmation email sent here when order is confirmed</span>
+                                </div>
+                            </div>
+                            <div class="form-row" style="margin-top:1.5rem;">
+                                <div class="form-group">
+                                    <label class="form-label" for="cust-whatsapp">WhatsApp Number <span
+                                            class="req">*</span></label>
+                                    <input type="tel" id="cust-whatsapp" class="form-input"
+                                        placeholder="+234 800 000 0000" required>
+                                    <span class="form-hint">We'll reach you here for updates</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cust-location">Delivery Location <span
+                                            class="req">*</span></label>
+                                    <input type="text" id="cust-location" class="form-input"
+                                        placeholder="e.g., Yaba, Lagos" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="form-block">
+                        <div class="form-block__body">
+                            <div class="checkbox-row" style="margin-bottom:1.5rem;">
+                                <input type="checkbox" id="terms" required>
+                                <label for="terms">I have made payment and uploaded my receipt. I agree to the terms of
+                                    this order.</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                                Submit Order
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- My Orders -->
+        <section id="my-orders" class="section orders-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="t-lg">My Orders</h2>
+                    <p class="text-sub">Track the status of your placed orders.</p>
+                </div>
+                <div id="orders-logged-out" class="empty-state" style="display: flex;">
+                    <div class="empty-state__icon">🔒</div>
+                    <h3 class="empty-state__title">Sign In to Track Orders</h3>
+                    <p class="empty-state__msg">You need to sign in to see your active order status and delivery updates.</p>
+                    <button class="btn btn-primary" id="orders-login-btn">Sign In Now</button>
+                </div>
+                <div id="orders-empty" class="empty-state" style="display: none;">
+                    <div class="empty-state__icon">📦</div>
+                    <h3 class="empty-state__title">No orders yet</h3>
+                    <p class="empty-state__msg">Your orders will appear here once you've submitted one.</p>
+                    <a href="#order-form" class="btn btn-primary">Place an Order</a>
+                </div>
+                <div id="orders-grid" class="orders-grid" style="display:none;"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="site-footer__grid">
+            <div class="footer-brand">
+                <a href="#" class="logo">SIGNOUTSHIRTS.</a>
+                <p class="footer-tagline">Simplifying sign-out shirt ordering for 400-Level students.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Get In Touch</h4>
+                <a href="https://wa.me/2348000000000" target="_blank">WhatsApp</a>
+                <a href="https://snapchat.com/add/signoutshirts" target="_blank">Snapchat</a>
+            </div>
+        </div>
+        <div class="site-footer__bottom">
+            <p>&copy; 2026 Signoutshirts. All rights reserved.</p>
+            <a href="admin.html" class="admin-link-footer">Admin</a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
