@@ -663,6 +663,12 @@ function initAdminNav() {
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    // Sync light/dark mode theme with main website preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+    }
+
     checkAuth();
     $('#login-btn').addEventListener('click', handleLogin);
     $('#logout-btn').addEventListener('click', handleLogout);

@@ -335,3 +335,64 @@ ol {
         transform: translateY(0);
     }
 }
+
+/* ==========================================================================
+   Dark Mode Override
+   ========================================================================== */
+body.dark {
+    --color-bg: #0f172a;
+    --color-bg-soft: #1e293b;
+    --color-bg-muted: #334155;
+
+    --color-text: #f8fafc;
+    --color-text-sub: #cbd5e1;
+    --color-text-faint: #64748b;
+
+    --color-border: #334155;
+    --color-border-dark: #475569;
+
+    --color-ink: #ffffff;
+    --color-ink-hover: #f1f5f9;
+}
+
+body.dark input,
+body.dark select,
+body.dark textarea {
+    background-color: var(--color-bg-soft);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+body.dark input::placeholder {
+    color: var(--color-text-faint);
+}
+
+body.dark .site-header {
+    background: rgba(15, 23, 42, 0.85);
+    border-bottom: 1px solid var(--color-border);
+}
+
+body.dark .shirt-card,
+body.dark .gallery-card,
+body.dark .auth-card,
+body.dark .analytics-card,
+body.dark .admin-panel,
+body.dark .admin-order-row,
+body.dark .order-status-card {
+    background-color: var(--color-bg-soft);
+    border-color: var(--color-border);
+}
+
+body.dark .btn-secondary {
+    background: var(--color-bg-muted);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark .btn-secondary:hover {
+    background: var(--color-bg-soft);
+}
+
+body.dark .nav__links.open {
+    background: var(--color-bg);
+}

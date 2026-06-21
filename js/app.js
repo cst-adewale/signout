@@ -882,9 +882,34 @@ function initNav() {
     });
 }
 
+// ─── Theme Toggle (Light / Dark Mode) ──────────────────────────────────────────
+
+function initTheme() {
+    const toggleBtn = $('#theme-toggle');
+    if (!toggleBtn) return;
+
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark');
+        toggleBtn.textContent = '☀️';
+    } else {
+        document.body.classList.remove('dark');
+        toggleBtn.textContent = '🌙';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        toggleBtn.textContent = isDark ? '☀️' : '🌙';
+    });
+}
+
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
+    initTheme();
     initAuth();
     await fetchProfile();
     await updateUI();
