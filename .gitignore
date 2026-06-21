@@ -9,6 +9,9 @@ pnpm-debug.log*
 # Dependencies
 node_modules/
 
+# Lock file — let Render regenerate for Linux (avoids native binary platform mismatch)
+package-lock.json
+
 # Environment secrets — NEVER commit this
 .env
 
