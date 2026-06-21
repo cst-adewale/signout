@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const dns = require('dns');
 const bcrypt = require('bcryptjs');
@@ -18,6 +19,9 @@ try {
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'sos_secret_key_2026_class';
+
+// Enable GZIP compression to load images/JS/CSS assets faster
+app.use(compression());
 
 // Enable CORS and parsing of larger JSON payloads for Base64 receipt images
 app.use(cors());

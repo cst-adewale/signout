@@ -340,16 +340,16 @@ ol {
    Dark Mode Override
    ========================================================================== */
 body.dark {
-    --color-bg: #0f172a;
-    --color-bg-soft: #1e293b;
-    --color-bg-muted: #334155;
+    --color-bg: #010101;          /* pitch black instead of deep blue */
+    --color-bg-soft: #222222;     /* dark grey alternate */
+    --color-bg-muted: #333333;
 
-    --color-text: #f8fafc;
+    --color-text: #ffffff;
     --color-text-sub: #cbd5e1;
-    --color-text-faint: #64748b;
+    --color-text-faint: #777777;
 
-    --color-border: #334155;
-    --color-border-dark: #475569;
+    --color-border: #333333;
+    --color-border-dark: #444444;
 
     --color-ink: #ffffff;
     --color-ink-hover: #f1f5f9;
@@ -368,7 +368,7 @@ body.dark input::placeholder {
 }
 
 body.dark .site-header {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(1, 1, 1, 0.85);
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -383,6 +383,12 @@ body.dark .order-status-card {
     border-color: var(--color-border);
 }
 
+/* Primary buttons are white in dark mode (because var(--color-ink) is #ffffff).
+   The text on white buttons in dark mode must be black. */
+body.dark .btn-primary {
+    color: #000000 !important;
+}
+
 body.dark .btn-secondary {
     background: var(--color-bg-muted);
     border-color: var(--color-border);
@@ -395,4 +401,5 @@ body.dark .btn-secondary:hover {
 
 body.dark .nav__links.open {
     background: var(--color-bg);
-}
+}
+
