@@ -37,6 +37,7 @@ const state = {
     customNumber: '',
     paymentMethod: 'bank-transfer',
     receipt: null,   // { name, size, type, dataUrl }
+    customDesign: null,
     orders: [],
     user: null,
     token: null,
@@ -59,6 +60,8 @@ const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
         src: `assets/des${num}.webp`,
     };
 });
+
+const INITIAL_GALLERY_COUNT = 8;
 
 function genId() {
     const d = new Date();
@@ -206,6 +209,23 @@ function selectDesign(id, name) {
     }
 }
 
+function persistSelectedDesign(id, name, src) {
+    try {
+        sessionStorage.setItem('sos_selected_design', JSON.stringify({ id, name, src }));
+    } catch (_) {}
+}
+
+function restoreSelectedDesign() {
+    try {
+        const raw = sessionStorage.getItem('sos_selected_design');
+        if (!raw) return;
+        const design = JSON.parse(raw);
+        if (design?.id && design?.name) {
+            selectDesign(design.id, design.name);
+        }
+    } catch (_) {}
+}
+
 function initGallery() {
     const grid = $('#gallery-grid');
     const modal = $('#gallery-modal');
@@ -216,7 +236,7 @@ function initGallery() {
     const selectBtn = $('#modal-select');
 
     if (grid && !grid.dataset.rendered) {
-        grid.innerHTML = DESIGN_CATALOG.map(design => `
+        grid.innerHTML = DESIGN_CATALOG.slice(0, INITIAL_GALLERY_COUNT).map(design => `
             <div class="gallery-card" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}">
                 <div class="gallery-card__img-wrap">
                     <img src="${design.src}" alt="${design.id}" loading="lazy" decoding="async">
@@ -225,7 +245,7 @@ function initGallery() {
                 <div class="gallery-card__foot">
                     <span class="design-tag">${design.id}</span>
                     <span class="gallery-card__name">${design.name}</span>
-                    <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="${design.id}" data-name="${design.name}">Select Design</button>
+                    <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}">Select Design</button>
                 </div>
             </div>
         `).join('');
@@ -278,6 +298,7 @@ function initGallery() {
         const id = selectBtn.dataset.id;
         const name = selectBtn.dataset.name;
 
+        persistSelectedDesign(id, name, selectBtn.dataset.src || modalImg.src);
         selectDesign(id, name);
         closeModal();
     });
@@ -428,6 +449,100 @@ function initUpload() {
     });
 }
 
+function compressCustomDesign(dataUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = dataUrl;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height && width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+            } else if (height >= width && height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/webp', 0.85));
+        };
+        img.onerror = () => resolve(dataUrl);
+    });
+}
+
+function initCustomDesignUpload() {
+    const input = $('#custom-design-input');
+    const preview = $('#custom-design-preview');
+    const removeBtn = $('#remove-custom-design');
+    const locked = $('#custom-design-locked');
+    const uploadWrap = $('#custom-design-upload-wrap');
+    const loginBtn = $('#custom-design-login-btn');
+
+    const sync = () => {
+        const signedIn = !!state.user;
+        if (locked) locked.style.display = signedIn ? 'none' : 'block';
+        if (uploadWrap) uploadWrap.style.display = signedIn ? 'block' : 'none';
+        if (input) input.disabled = !signedIn;
+    };
+
+    sync();
+
+    loginBtn?.addEventListener('click', () => $('#form-login-btn')?.click());
+
+    input?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file || !state.user) return;
+
+        const maxBytes = CONFIG.maxFileSizeMB * 1024 * 1024;
+        if (file.size > maxBytes) {
+            Swal.fire('File Too Large', `Please upload a file under ${CONFIG.maxFileSizeMB}MB.`, 'error');
+            input.value = '';
+            return;
+        }
+
+        const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            Swal.fire('Wrong File Type', 'Please upload a PNG, JPG, or WebP image.', 'error');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async ev => {
+            $('#custom-design-preview-name').textContent = 'Compressing design...';
+            preview.classList.add('show');
+            const compressedDataUrl = await compressCustomDesign(ev.target.result);
+            const approxSize = Math.round((compressedDataUrl.length - 814) / 1.37);
+
+            state.customDesign = {
+                name: file.name,
+                size: approxSize,
+                type: file.type,
+                dataUrl: compressedDataUrl,
+            };
+
+            $('#custom-design-preview-icon').textContent = '🎨';
+            $('#custom-design-preview-name').textContent = file.name;
+            $('#custom-design-preview-size').textContent = `${(approxSize / 1024).toFixed(1)} KB (Optimized)`;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    removeBtn?.addEventListener('click', () => {
+        state.customDesign = null;
+        input.value = '';
+        preview.classList.remove('show');
+    });
+}
+
 // ─── Form Validation ──────────────────────────────────────────────────────────
 
 function validate() {
@@ -496,6 +611,7 @@ async function handleSubmit(e) {
             method: state.paymentMethod,
         },
         receipt: state.receipt,
+        customDesign: state.customDesign,
         pricing: {
             unit: pricing.unit,
             subtotal: pricing.subtotal,
@@ -605,6 +721,7 @@ function resetForm() {
     state.shirtType = 'plain';
     state.qty = 1;
     state.receipt = null;
+    state.customDesign = null;
 
     const display = $('#design-display');
     display.textContent = 'No design selected — browse above';
@@ -614,6 +731,7 @@ function resetForm() {
     $$('.gallery-card').forEach(c => c.classList.remove('selected'));
 
     $('#file-preview').classList.remove('show');
+    $('#custom-design-preview')?.classList.remove('show');
     $('#custom-section').style.display = 'none';
 
     refreshPricing();
@@ -714,6 +832,15 @@ function initAuth() {
         document.body.style.overflow = '';
     }
 
+    function syncCustomDesignGate() {
+        const locked = $('#custom-design-locked');
+        const uploadWrap = $('#custom-design-upload-wrap');
+        const input = $('#custom-design-input');
+        if (locked) locked.style.display = state.user ? 'none' : 'block';
+        if (uploadWrap) uploadWrap.style.display = state.user ? 'block' : 'none';
+        if (input) input.disabled = !state.user;
+    }
+
     authBtn.addEventListener('click', (e) => {
         e.preventDefault();
         if (state.user) {
@@ -782,6 +909,7 @@ function initAuth() {
                 loginForm.reset();
                 
                 await updateUI();
+                syncCustomDesignGate();
                 Swal.fire('Success', `Welcome back, ${data.user.name}!`, 'success');
             } else {
                 throw new Error(data.message || 'Login failed');
@@ -832,6 +960,7 @@ function initAuth() {
                 signupForm.reset();
 
                 await updateUI();
+                syncCustomDesignGate();
                 Swal.fire('Success', `Account created! Welcome, ${data.user.name}!`, 'success');
             } else {
                 throw new Error(data.message || 'Registration failed');
@@ -888,6 +1017,8 @@ async function updateUI() {
         $('#cust-location').value = '';
         state.orders = [];
     }
+
+    syncCustomDesignGate();
 }
 
 function logout() {
@@ -896,6 +1027,15 @@ function logout() {
     state.user = null;
     updateUI();
     Swal.fire('Signed Out', 'You have successfully signed out.', 'success');
+}
+
+function syncCustomDesignGate() {
+    const locked = $('#custom-design-locked');
+    const uploadWrap = $('#custom-design-upload-wrap');
+    const input = $('#custom-design-input');
+    if (locked) locked.style.display = state.user ? 'none' : 'block';
+    if (uploadWrap) uploadWrap.style.display = state.user ? 'block' : 'none';
+    if (input) input.disabled = !state.user;
 }
 
 // ─── Mobile Nav ───────────────────────────────────────────────────────────────
@@ -944,6 +1084,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initNav();
     initGallery();
+    initCustomDesignUpload();
     initShirtType();
     initQty();
     initPayment();
@@ -951,6 +1092,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshPricing();
 
     $('#main-form').addEventListener('submit', handleSubmit);
+    restoreSelectedDesign();
 
     console.log('🎽 Signoutshirts app ready');
 });

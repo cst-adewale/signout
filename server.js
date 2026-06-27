@@ -67,6 +67,12 @@ const OrderSchema = new mongoose.Schema({
         type: { type: String },
         dataUrl: { type: String }
     },
+    customDesign: {
+        name: { type: String, default: '' },
+        size: { type: Number },
+        type: { type: String },
+        dataUrl: { type: String }
+    },
     pricing: {
         unit: Number,
         subtotal: Number,
@@ -355,15 +361,29 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         };
 
         // If receipt is image, we can attach it to the email
+        const attachments = [];
         if (newOrder.receipt && newOrder.receipt.dataUrl && newOrder.receipt.dataUrl.startsWith('data:')) {
             const matches = newOrder.receipt.dataUrl.match(/^data:(.+);base64,(.+)$/);
             if (matches && matches.length === 3) {
-                mailOptions.attachments = [{
+                attachments.push({
                     filename: newOrder.receipt.name || 'receipt.png',
                     content: Buffer.from(matches[2], 'base64'),
                     contentType: matches[1]
-                }];
+                });
             }
+        }
+        if (newOrder.customDesign && newOrder.customDesign.dataUrl && newOrder.customDesign.dataUrl.startsWith('data:')) {
+            const matches = newOrder.customDesign.dataUrl.match(/^data:(.+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                attachments.push({
+                    filename: newOrder.customDesign.name || 'custom-design.png',
+                    content: Buffer.from(matches[2], 'base64'),
+                    contentType: matches[1]
+                });
+            }
+        }
+        if (attachments.length) {
+            mailOptions.attachments = attachments;
         }
 
         sendMailSafe(mailOptions);
@@ -371,6 +391,27 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('Error creating order:', err);
         res.status(500).json({ success: false, message: 'Server error. Could not place order.' });
+    }
+});
+
+// 5.5. Wipe All Orders (Admin only)
+app.delete('/api/orders', async (req, res) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        const expected = process.env.ADMIN_PASSWORD || 'admin123';
+        if (password !== expected) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const result = await Order.deleteMany({});
+        res.json({
+            success: true,
+            message: 'All orders cleared successfully',
+            deletedCount: result.deletedCount || 0
+        });
+    } catch (err) {
+        console.error('Error wiping orders:', err);
+        res.status(500).json({ success: false, message: 'Server error. Failed to wipe orders.' });
     }
 });
 

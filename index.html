@@ -113,6 +113,51 @@
                     <p class="text-sub">Click any design to preview and select it for your order.</p>
                 </div>
                 <div class="gallery-grid" id="gallery-grid"></div>
+                <div style="display:flex;justify-content:center;margin-top:1.5rem;">
+                    <a href="designs.html" class="btn btn-secondary" id="show-more-designs">Show More</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Custom Design Upload -->
+        <section class="section" id="custom-design-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="t-lg">Upload Your Own Design</h2>
+                    <p class="text-sub">Signed-in users can upload a custom artwork to send with the order and receipt.</p>
+                </div>
+                <div class="form-block">
+                    <div class="form-block__head">
+                        <div class="form-block__step">Step 3</div>
+                        <div class="form-block__title">Custom Design Upload</div>
+                    </div>
+                    <div class="form-block__body">
+                        <div id="custom-design-locked" class="empty-state" style="display:block;">
+                            <div class="empty-state__icon">🔒</div>
+                            <h3 class="empty-state__title">Sign In to Upload</h3>
+                            <p class="empty-state__msg">Please sign in before uploading your own design.</p>
+                            <button type="button" class="btn btn-primary" id="custom-design-login-btn">Sign In Now</button>
+                        </div>
+                        <div id="custom-design-upload-wrap" style="display:none;">
+                            <div class="file-upload">
+                                <input type="file" id="custom-design-input" class="file-upload__input" accept="image/*">
+                                <label for="custom-design-input" class="file-upload__zone">
+                                    <span class="file-upload__icon">🎨</span>
+                                    <span class="file-upload__title">Click to upload your design</span>
+                                    <span class="file-upload__sub">PNG, JPG or WebP — Max 5MB</span>
+                                </label>
+                                <div class="file-preview" id="custom-design-preview">
+                                    <div class="file-preview__icon" id="custom-design-preview-icon">🖼️</div>
+                                    <div>
+                                        <div class="file-preview__name" id="custom-design-preview-name"></div>
+                                        <div class="file-preview__size" id="custom-design-preview-size"></div>
+                                    </div>
+                                    <button type="button" class="file-preview__remove" id="remove-custom-design">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -281,7 +326,7 @@
                     <!-- 3. Size & Quantity -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 3</div>
+                            <div class="form-block__step">Step 4</div>
                             <div class="form-block__title">Size &amp; Quantity</div>
                         </div>
                         <div class="form-block__body">
@@ -345,7 +390,7 @@
                     <!-- 4. Personalization (custom only) -->
                     <div class="form-block" id="custom-section" style="display:none;">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 4 — Optional</div>
+                            <div class="form-block__step">Step 5 — Optional</div>
                             <div class="form-block__title">Back Print Personalization</div>
                         </div>
                         <div class="form-block__body">
@@ -369,7 +414,7 @@
                     <!-- 5. Payment Method -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 5</div>
+                            <div class="form-block__step">Step 6</div>
                             <div class="form-block__title">Payment Method</div>
                         </div>
                         <div class="form-block__body">
@@ -403,7 +448,7 @@
                     <!-- 6. Receipt Upload -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 6</div>
+                            <div class="form-block__step">Step 7</div>
                             <div class="form-block__title">Upload Payment Receipt</div>
                         </div>
                         <div class="form-block__body">
@@ -429,7 +474,7 @@
                     <!-- 7. Your Details -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 7</div>
+                            <div class="form-block__step">Step 8</div>
                             <div class="form-block__title">Your Details</div>
                         </div>
                         <div class="form-block__body">

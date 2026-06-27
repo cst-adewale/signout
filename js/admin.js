@@ -306,6 +306,13 @@ function buildOrderHTML(order) {
                             📄 View Receipt
                         </button>
                     ` : '<span style="color: var(--color-text-faint); font-size: .85rem;">No Receipt Uploaded</span>'}
+                    ${order.customDesign && order.customDesign.name ? `
+                        <div style="margin-top:.75rem;">
+                            <button class="btn btn-secondary btn-sm view-custom-design-btn" data-id="${order.id}">
+                                🎨 View Custom Design
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
 
@@ -424,6 +431,11 @@ function attachOrderEventListeners(container) {
         btn.addEventListener('click', viewReceiptHandler);
     });
 
+    container.querySelectorAll('.view-custom-design-btn').forEach(btn => {
+        btn.removeEventListener('click', viewCustomDesignHandler);
+        btn.addEventListener('click', viewCustomDesignHandler);
+    });
+
     // Confirm, Reject, Delivery, Delivered
     container.querySelectorAll('.confirm-order-btn').forEach(btn => {
         btn.removeEventListener('click', confirmOrderHandler);
@@ -493,6 +505,40 @@ const viewReceiptHandler = async function (e) {
     } catch (err) {
         Swal.fire('Error', 'Could not load receipt. Check your connection.', 'error');
     }
+};
+
+const viewCustomDesignHandler = async function () {
+    const orderId = this.dataset.id;
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order || !order.customDesign) return;
+
+    Swal.fire({
+        title: `Loading Custom Design #${orderId}…`,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    const data = order.customDesign;
+    const isPdf = (data.type || '').includes('pdf');
+    Swal.fire({
+        title: `Custom Design: #${orderId}`,
+        html: isPdf
+            ? `<iframe src="${data.dataUrl}" style="width:100%; height:420px; border:none;"></iframe>`
+            : `<img src="${data.dataUrl}" style="max-width:100%; max-height:420px; object-fit:contain; border-radius:8px;" alt="Custom Design">`,
+        showCloseButton: true,
+        confirmButtonText: '⬇ Download',
+        confirmButtonColor: '#000000',
+        showDenyButton: true,
+        denyButtonText: 'Close',
+        denyButtonColor: '#9ca3af'
+    }).then(result => {
+        if (result.isConfirmed) {
+            const link = document.createElement('a');
+            link.href = data.dataUrl;
+            link.download = data.name || `custom_design_${orderId}`;
+            link.click();
+        }
+    });
 };
 
 const confirmOrderHandler = function (e) {
@@ -628,6 +674,87 @@ async function markDelivered(id) {
     }
 }
 
+function initWipeDb() {
+    const wipeBtn = $('#wipe-db-btn');
+    const warnModal = $('#wipe-warn-modal');
+    const confirmModal = $('#wipe-confirm-modal');
+    const warnCancel = $('#wipe-warn-cancel');
+    const warnProceed = $('#wipe-warn-proceed');
+    const confirmCancel = $('#wipe-confirm-cancel');
+    const confirmDelete = $('#wipe-confirm-delete');
+    const confirmInput = $('#wipe-confirm-input');
+
+    const openModal = (modal) => {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = (modal) => {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    };
+
+    const resetConfirm = () => {
+        if (!confirmInput) return;
+        confirmInput.value = '';
+        confirmDelete.disabled = true;
+        confirmDelete.style.opacity = '.4';
+        confirmDelete.style.cursor = 'not-allowed';
+    };
+
+    wipeBtn?.addEventListener('click', () => openModal(warnModal));
+    warnCancel?.addEventListener('click', () => closeModal(warnModal));
+    warnProceed?.addEventListener('click', () => {
+        closeModal(warnModal);
+        openModal(confirmModal);
+        resetConfirm();
+        confirmInput?.focus();
+    });
+    confirmCancel?.addEventListener('click', () => {
+        closeModal(confirmModal);
+        resetConfirm();
+    });
+
+    confirmInput?.addEventListener('input', () => {
+        const ok = confirmInput.value.trim().toLowerCase() === 'delete database orders';
+        confirmDelete.disabled = !ok;
+        confirmDelete.style.opacity = ok ? '1' : '.4';
+        confirmDelete.style.cursor = ok ? 'pointer' : 'not-allowed';
+    });
+
+    confirmDelete?.addEventListener('click', async () => {
+        const result = await Swal.fire({
+            title: 'Delete all orders?',
+            text: 'This will remove every order record from the database.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: 'Yes, delete orders'
+        });
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await fetch('/api/orders', {
+                method: 'DELETE',
+                headers: { 'x-admin-password': state.password }
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal(confirmModal);
+                Swal.fire('Deleted', `${data.deletedCount || 0} orders were removed.`, 'success');
+                loadData(true);
+            } else {
+                Swal.fire('Error', data.message || 'Could not wipe orders.', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Server connection error.', 'error');
+        }
+    });
+}
+
 // ─── Filter Pills (Debounced) ────────────────────────────────────────────────
 function initFilters() {
     let filterTimeout;
@@ -674,5 +801,6 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#logout-btn').addEventListener('click', handleLogout);
     initFilters();
     initAdminNav();
+    initWipeDb();
     console.log('⚡ Admin dashboard ready (optimized for speed)');
 });
