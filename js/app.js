@@ -50,6 +50,16 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const fmt = (n) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(n);
 
+const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
+    const num = i + 1;
+    const id = `D${String(num).padStart(2, '0')}`;
+    return {
+        id,
+        name: `Design ${String(num).padStart(2, '0')}`,
+        src: `assets/des${num}.webp`,
+    };
+});
+
 function genId() {
     const d = new Date();
     const dd = String(d.getDate()).padStart(2, '0');
@@ -197,12 +207,30 @@ function selectDesign(id, name) {
 }
 
 function initGallery() {
+    const grid = $('#gallery-grid');
     const modal = $('#gallery-modal');
     const modalImg = $('#modal-img');
     const modalTag = $('#modal-tag');
     const modalName = $('#modal-name');
     const closeBtn = $('#modal-close');
     const selectBtn = $('#modal-select');
+
+    if (grid && !grid.dataset.rendered) {
+        grid.innerHTML = DESIGN_CATALOG.map(design => `
+            <div class="gallery-card" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}">
+                <div class="gallery-card__img-wrap">
+                    <img src="${design.src}" alt="${design.id}" loading="lazy" decoding="async">
+                    <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span></div>
+                </div>
+                <div class="gallery-card__foot">
+                    <span class="design-tag">${design.id}</span>
+                    <span class="gallery-card__name">${design.name}</span>
+                    <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="${design.id}" data-name="${design.name}">Select Design</button>
+                </div>
+            </div>
+        `).join('');
+        grid.dataset.rendered = 'true';
+    }
 
     $$('.gallery-card').forEach(card => {
         card.addEventListener('click', (e) => {
