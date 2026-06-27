@@ -36,3 +36,38 @@ grid.querySelectorAll('[data-select]').forEach(btn => {
         window.location.href = 'index.html#order-form';
     });
 });
+
+grid.querySelectorAll('.gallery-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-select]')) return;
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay active';
+        modal.innerHTML = `
+            <div class="modal" role="dialog" style="max-width:720px;">
+                <button class="modal__close" aria-label="Close">&times;</button>
+                <div class="modal__body">
+                    <div class="modal__img-col">
+                        <img src="${card.dataset.src}" alt="${card.dataset.id}" style="width:100%;height:auto;">
+                    </div>
+                    <div class="modal__info-col">
+                        <span class="design-tag">${card.dataset.id}</span>
+                        <h3 class="t-md" style="margin-top:.5rem;">${card.dataset.name}</h3>
+                        <button class="btn btn-primary w-full" data-select-preview="${card.dataset.id}" style="margin-top:1rem;">Use This Design</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        const close = () => modal.remove();
+        modal.querySelector('.modal__close').addEventListener('click', close);
+        modal.addEventListener('click', (ev) => { if (ev.target === modal) close(); });
+        modal.querySelector('[data-select-preview]').addEventListener('click', () => {
+            sessionStorage.setItem('sos_selected_design', JSON.stringify({
+                id: card.dataset.id,
+                name: card.dataset.name,
+                src: card.dataset.src
+            }));
+            window.location.href = 'index.html#order-form';
+        });
+    });
+});

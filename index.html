@@ -343,6 +343,7 @@
                                         <option value="L">Large (L)</option>
                                         <option value="XL">Extra Large (XL)</option>
                                         <option value="XXL">2XL</option>
+                                        <option value="3XL">3XL</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -374,7 +375,7 @@
                                     <span class="price-row__value" id="price-original"></span>
                                 </div>
                                 <div class="price-row price-row--discount" id="price-discount-row"
-                                    style="display:none;">
+                                    style="display:none; color:#16a34a;">
                                     <span class="price-row__label">Discount (10%)</span>
                                     <span class="price-row__value" id="price-discount"></span>
                                 </div>
@@ -514,6 +515,20 @@
                     <!-- Submit -->
                     <div class="form-block">
                         <div class="form-block__body">
+                            <div class="form-block" style="margin-bottom:1.5rem;">
+                                <div class="form-block__head">
+                                    <div class="form-block__step">Cart</div>
+                                    <div class="form-block__title">Selected Designs</div>
+                                </div>
+                                <div class="form-block__body">
+                                    <div id="cart-empty" class="empty-state" style="display:block;">
+                                        <div class="empty-state__icon">🛒</div>
+                                        <h3 class="empty-state__title">No designs added yet</h3>
+                                        <p class="empty-state__msg">Add one or more designs before placing your order.</p>
+                                    </div>
+                                    <div id="cart-items" style="display:none;gap:1rem;flex-direction:column;"></div>
+                                </div>
+                            </div>
                             <div class="checkbox-row" style="margin-bottom:1.5rem;">
                                 <input type="checkbox" id="terms" required>
                                 <label for="terms">I have made payment and uploaded my receipt. I agree to the terms of

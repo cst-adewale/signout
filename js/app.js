@@ -38,6 +38,7 @@ const state = {
     paymentMethod: 'bank-transfer',
     receipt: null,   // { name, size, type, dataUrl }
     customDesign: null,
+    cart: [],
     orders: [],
     user: null,
     token: null,
@@ -209,6 +210,88 @@ function selectDesign(id, name) {
     }
 }
 
+function addToCart(design) {
+    const existing = state.cart.find(item => item.id === design.id);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        state.cart.push({ id: design.id, name: design.name, src: design.src, qty: 1 });
+    }
+    persistCart();
+    renderCart();
+}
+
+function persistCart() {
+    try {
+        sessionStorage.setItem('sos_cart', JSON.stringify(state.cart));
+    } catch (_) {}
+}
+
+function restoreCart() {
+    try {
+        const raw = sessionStorage.getItem('sos_cart');
+        state.cart = raw ? JSON.parse(raw) : [];
+    } catch (_) {
+        state.cart = [];
+    }
+}
+
+function renderCart() {
+    const empty = $('#cart-empty');
+    const items = $('#cart-items');
+    const selectedId = $('#selected-design-id');
+    if (!empty || !items) return;
+
+    if (state.cart.length === 0) {
+        empty.style.display = 'block';
+        items.style.display = 'none';
+        if (selectedId) selectedId.value = '';
+        return;
+    }
+
+    empty.style.display = 'none';
+    items.style.display = 'flex';
+    items.innerHTML = state.cart.map(item => `
+        <div class="gallery-card" style="display:grid;grid-template-columns:90px 1fr;gap:1rem;align-items:center;">
+            <img src="${item.src}" alt="${item.id}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;">
+            <div>
+                <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;">
+                    <strong>${item.name}</strong>
+                    <span class="design-tag">${item.id}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem;">
+                    <button type="button" class="qty-stepper__btn cart-dec" data-id="${item.id}">−</button>
+                    <span>${item.qty}</span>
+                    <button type="button" class="qty-stepper__btn cart-inc" data-id="${item.id}">+</button>
+                    <button type="button" class="btn btn-secondary btn-sm cart-remove" data-id="${item.id}" style="margin-left:auto;">Remove</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    items.querySelectorAll('.cart-dec').forEach(btn => btn.onclick = () => {
+        const item = state.cart.find(x => x.id === btn.dataset.id);
+        if (!item) return;
+        item.qty = Math.max(1, item.qty - 1);
+        persistCart();
+        renderCart();
+    });
+    items.querySelectorAll('.cart-inc').forEach(btn => btn.onclick = () => {
+        const item = state.cart.find(x => x.id === btn.dataset.id);
+        if (!item) return;
+        item.qty += 1;
+        persistCart();
+        renderCart();
+    });
+    items.querySelectorAll('.cart-remove').forEach(btn => btn.onclick = () => {
+        state.cart = state.cart.filter(x => x.id !== btn.dataset.id);
+        persistCart();
+        renderCart();
+    });
+
+    if (selectedId && state.cart[0]) selectedId.value = state.cart[0].id;
+}
+
 function persistSelectedDesign(id, name, src) {
     try {
         sessionStorage.setItem('sos_selected_design', JSON.stringify({ id, name, src }));
@@ -280,6 +363,8 @@ function initGallery() {
             e.stopPropagation();
             const id = btn.dataset.id;
             const name = btn.dataset.name;
+            const src = btn.dataset.src || `assets/des${Number(id.slice(1))}.webp`;
+            addToCart({ id, name, src });
             selectDesign(id, name);
         });
     });
@@ -297,8 +382,10 @@ function initGallery() {
     selectBtn.addEventListener('click', () => {
         const id = selectBtn.dataset.id;
         const name = selectBtn.dataset.name;
+        const src = selectBtn.dataset.src || modalImg.src;
 
-        persistSelectedDesign(id, name, selectBtn.dataset.src || modalImg.src);
+        persistSelectedDesign(id, name, src);
+        addToCart({ id, name, src });
         selectDesign(id, name);
         closeModal();
     });
@@ -546,8 +633,8 @@ function initCustomDesignUpload() {
 // ─── Form Validation ──────────────────────────────────────────────────────────
 
 function validate() {
-    if (!state.designId) {
-        Swal.fire('No Design Selected', 'Please pick a design from the gallery above.', 'warning');
+    if (!state.cart.length) {
+        Swal.fire('No Design Selected', 'Please add at least one design to your cart.', 'warning');
         return false;
     }
     if (!$('#size-select').value) {
@@ -600,7 +687,8 @@ async function handleSubmit(e) {
         id: genId(),
         createdAt: new Date().toISOString(),
         shirtType: state.shirtType,
-        design: { id: state.designId, name: state.designName },
+        design: { id: state.cart[0].id, name: state.cart[0].name },
+        cartItems: state.cart,
         size: $('#size-select').value,
         qty: state.qty,
         customization: {
@@ -722,11 +810,14 @@ function resetForm() {
     state.qty = 1;
     state.receipt = null;
     state.customDesign = null;
+    state.cart = [];
+    persistCart();
 
     const display = $('#design-display');
     display.textContent = 'No design selected — browse above';
     display.classList.remove('has-design');
     $('#selected-design-id').value = '';
+    renderCart();
 
     $$('.gallery-card').forEach(c => c.classList.remove('selected'));
 
@@ -1000,6 +1091,7 @@ async function updateUI() {
         // Fetch and render orders from database
         await fetchUserOrders();
         renderMyOrders();
+        renderCart();
     } else {
         // Logged Out State
         authBtn.textContent = 'Sign In';
@@ -1016,6 +1108,7 @@ async function updateUI() {
         $('#cust-whatsapp').value = '';
         $('#cust-location').value = '';
         state.orders = [];
+        renderCart();
     }
 
     syncCustomDesignGate();
@@ -1078,6 +1171,7 @@ function initTheme() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
+    restoreCart();
     initAuth();
     await fetchProfile();
     await updateUI();

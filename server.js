@@ -52,6 +52,12 @@ const OrderSchema = new mongoose.Schema({
         id: { type: String, required: true },
         name: { type: String, required: true }
     },
+    cartItems: [{
+        id: { type: String, required: true },
+        name: { type: String, required: true },
+        src: { type: String, default: '' },
+        qty: { type: Number, default: 1 }
+    }],
     size: { type: String, required: true },
     qty: { type: Number, required: true },
     customization: {

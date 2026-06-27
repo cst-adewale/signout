@@ -1000,6 +1000,10 @@
     background: var(--color-bg-soft);
 }
 
+body.dark .admin-order-row:hover {
+    background: #000;
+}
+
 .admin-order-row__top {
     display: flex;
     justify-content: space-between;
