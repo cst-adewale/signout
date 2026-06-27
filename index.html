@@ -63,7 +63,8 @@
                 <div class="shirt-grid">
                     <div class="shirt-card">
                         <div class="shirt-card__img-wrap">
-                            <img src="assets/plain-shirt.webp" alt="Plain White T-Shirt" loading="lazy" decoding="async">
+                            <img src="assets/plain-shirt.webp" alt="Plain White T-Shirt" loading="lazy"
+                                decoding="async">
                         </div>
                         <div class="shirt-card__body">
                             <div class="shirt-card__meta">
@@ -81,7 +82,8 @@
                     </div>
                     <div class="shirt-card">
                         <div class="shirt-card__img-wrap">
-                            <img src="assets/custom-shirt.webp" alt="Customized White T-Shirt" loading="lazy" decoding="async">
+                            <img src="assets/custom-shirt.webp" alt="Customized White T-Shirt" loading="lazy"
+                                decoding="async">
                         </div>
                         <div class="shirt-card__body">
                             <div class="shirt-card__meta">
@@ -124,7 +126,8 @@
             <div class="container">
                 <div class="section-header">
                     <h2 class="t-lg">Upload Your Own Design</h2>
-                    <p class="text-sub">Signed-in users can upload a custom artwork to send with the order and receipt.</p>
+                    <p class="text-sub">Signed-in users can upload a custom artwork to send with the order and receipt.
+                    </p>
                 </div>
                 <div class="form-block">
                     <div class="form-block__head">
@@ -136,7 +139,8 @@
                             <div class="empty-state__icon">🔒</div>
                             <h3 class="empty-state__title">Sign In to Upload</h3>
                             <p class="empty-state__msg">Please sign in before uploading your own design.</p>
-                            <button type="button" class="btn btn-primary" id="custom-design-login-btn">Sign In Now</button>
+                            <button type="button" class="btn btn-primary" id="custom-design-login-btn">Sign In
+                                Now</button>
                         </div>
                         <div id="custom-design-upload-wrap" style="display:none;">
                             <div class="file-upload">
@@ -152,7 +156,8 @@
                                         <div class="file-preview__name" id="custom-design-preview-name"></div>
                                         <div class="file-preview__size" id="custom-design-preview-size"></div>
                                     </div>
-                                    <button type="button" class="file-preview__remove" id="remove-custom-design">✕</button>
+                                    <button type="button" class="file-preview__remove"
+                                        id="remove-custom-design">✕</button>
                                 </div>
                             </div>
                         </div>
@@ -309,28 +314,32 @@
                         </div>
                     </div>
 
-                    <!-- 2. Cart -->
+                    <!-- 2. Design -->
                     <div class="form-block">
                         <div class="form-block__head">
                             <div class="form-block__step">Step 2</div>
-                            <div class="form-block__title">Cart</div>
+                            <div class="form-block__title">Select a Design</div>
                         </div>
                         <div class="form-block__body">
-                            <div id="cart-empty" class="empty-state" style="display:block;">
-                                <div class="empty-state__icon">??</div>
-                                <h3 class="empty-state__title">No designs added yet</h3>
-                                <p class="empty-state__msg">Add one or more designs before placing your order.</p>
+                            <input type="hidden" id="selected-design-id" required>
+                            <div class="design-display" id="design-display">
+                                No design selected — <a href="#gallery" class="form-link">browse above</a>
                             </div>
-                            <div id="cart-items" style="display:none;gap:1rem;flex-direction:column;"></div>
                         </div>
                     </div>
+
                     <!-- 3. Size & Quantity -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 3</div>
+                            <div class="form-block__step">Step 4</div>
                             <div class="form-block__title">Size &amp; Quantity</div>
                         </div>
                         <div class="form-block__body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="size-select">
+                                        Size <span class="req">*</span>
+                                    </label>
                                     <select id="size-select" class="form-select" required>
                                         <option value="">Choose size...</option>
                                         <option value="XS">Extra Small (XS)</option>
@@ -511,6 +520,22 @@
                     <!-- Submit -->
                     <div class="form-block">
                         <div class="form-block__body">
+                            <div class="form-block" style="margin-bottom:1.5rem;">
+                                <div class="form-block__head">
+                                    <div class="form-block__step">Cart</div>
+                                    <div class="form-block__title">Selected Designs</div>
+                                </div>
+                                <div class="form-block__body">
+                                    <div id="cart-empty" class="empty-state" style="display:block;">
+                                        <div class="empty-state__icon">🛒</div>
+                                        <h3 class="empty-state__title">No designs added yet</h3>
+                                        <p class="empty-state__msg">Add one or more designs before placing your order.
+                                        </p>
+                                    </div>
+                                    <div id="cart-items" style="display:none;gap:1rem;flex-direction:column;"></div>
+                                </div>
+                            </div>
+                            <div class="checkbox-row" style="margin-bottom:1.5rem;">
                                 <input type="checkbox" id="terms" required>
                                 <label for="terms">I have made payment and uploaded my receipt. I agree to the terms of
                                     this order.</label>
@@ -573,4 +598,3 @@
 </body>
 
 </html>
-
