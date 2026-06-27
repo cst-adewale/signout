@@ -58,7 +58,8 @@
             <div class="container">
                 <div class="section-header">
                     <h2 class="t-lg">Choose Your Style</h2>
-                    <p class="text-sub">Two options, same premium cotton.</p>
+                    <p class="text-sub">Two options, same premium cotton. Pick either or both below in the gallery —
+                        each goes into your cart with its own size and quantity.</p>
                 </div>
                 <div class="shirt-grid">
                     <div class="shirt-card">
@@ -112,7 +113,9 @@
             <div class="container">
                 <div class="section-header">
                     <h2 class="t-lg">Available Designs</h2>
-                    <p class="text-sub">Click any design to preview and select it for your order.</p>
+                    <p class="text-sub">Click any tile to preview it, or hit "Select Design" to add it straight to
+                        your cart. The Plain White T-Shirt lives here too — pick as many designs and plain shirts
+                        as you like, and tap "Remove" to deselect.</p>
                 </div>
                 <div class="gallery-grid" id="gallery-grid"></div>
                 <div style="display:flex;justify-content:center;margin-top:1.5rem;">
@@ -282,126 +285,38 @@
                 </div>
 
                 <form id="main-form" class="order-form-wrapper" novalidate>
-                    <!-- 1. Shirt Type -->
+                    <!-- Hidden field kept for any code/integrations that still read the first selected design -->
+                    <input type="hidden" id="selected-design-id" value="">
+
+                    <!-- 1. Cart (designs, plain shirts, size & quantity per item) -->
                     <div class="form-block">
                         <div class="form-block__head">
                             <div class="form-block__step">Step 1</div>
-                            <div class="form-block__title">Select Shirt Type</div>
-                        </div>
-                        <div class="form-block__body">
-                            <div class="payment-options">
-                                <label class="payment-option">
-                                    <input type="radio" name="shirt-type" value="plain" checked>
-                                    <span class="payment-option__card">
-                                        <span class="payment-option__icon">👕</span>
-                                        <span class="payment-option__label">
-                                            <span class="t-sm">Plain White T-Shirt</span>
-                                            <span class="t-xs">₦5,000 per shirt</span>
-                                        </span>
-                                    </span>
-                                </label>
-                                <label class="payment-option">
-                                    <input type="radio" name="shirt-type" value="custom">
-                                    <span class="payment-option__card">
-                                        <span class="payment-option__icon">🎨</span>
-                                        <span class="payment-option__label">
-                                            <span class="t-sm">Customized T-Shirt</span>
-                                            <span class="t-xs">₦6,000 per shirt</span>
-                                        </span>
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Cart -->
-                    <div class="form-block">
-                        <div class="form-block__head">
-                            <div class="form-block__step">Step 2</div>
-                            <div class="form-block__title">Selected Designs</div>
+                            <div class="form-block__title">Your Shirts</div>
                         </div>
                         <div class="form-block__body">
                             <div id="cart-empty" class="empty-state" style="display:block;">
                                 <div class="empty-state__icon">🛒</div>
-                                <h3 class="empty-state__title">No designs added yet</h3>
-                                <p class="empty-state__msg">Add one or more designs before placing your order.</p>
+                                <h3 class="empty-state__title">No shirts added yet</h3>
+                                <p class="empty-state__msg">Pick the Plain White T-Shirt and/or one or more designs
+                                    from the gallery above — each one lands here with its own size and quantity.</p>
                             </div>
                             <div id="cart-items" style="display:none;gap:1rem;flex-direction:column;"></div>
+
+                            <!-- Live pricing summary, driven entirely by the cart above -->
+                            <div id="cart-price-summary"></div>
                         </div>
                     </div>
 
-                    <!-- 3. Size & Quantity -->
+                    <!-- 2. Personalization (only meaningful if a designed shirt is in the cart) -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 3</div>
-                            <div class="form-block__title">Size &amp; Quantity</div>
-                        </div>
-                        <div class="form-block__body">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label" for="size-select">
-                                        Size <span class="req">*</span>
-                                    </label>
-                                    <select id="size-select" class="form-select" required>
-                                        <option value="">Choose size...</option>
-                                        <option value="XS">Extra Small (XS)</option>
-                                        <option value="S">Small (S)</option>
-                                        <option value="M">Medium (M)</option>
-                                        <option value="L">Large (L)</option>
-                                        <option value="XL">Extra Large (XL)</option>
-                                        <option value="XXL">2XL</option>
-                                        <option value="3XL">3XL</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Quantity <span class="req">*</span></label>
-                                    <div class="qty-stepper">
-                                        <button type="button" class="qty-stepper__btn" id="qty-dec">−</button>
-                                        <input type="number" id="qty-input" class="qty-stepper__input" value="1" min="1"
-                                            max="100" required>
-                                        <button type="button" class="qty-stepper__btn" id="qty-inc">+</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bulk Discount -->
-                            <div class="bulk-banner" id="bulk-banner" style="margin-top:1rem;">
-                                <span class="bulk-banner__badge">10% OFF</span>
-                                <span class="bulk-banner__text">Bulk discount applied for 5+ shirts!</span>
-                            </div>
-
-                            <!-- Pricing Summary -->
-                            <div class="price-box" style="margin-top:1.5rem;">
-                                <div class="price-row" id="price-unit-row">
-                                    <span class="price-row__label">Unit Price</span>
-                                    <span class="price-row__value" id="price-unit">₦5,000</span>
-                                </div>
-                                <div class="price-row price-row--strikethrough" id="price-original-row"
-                                    style="display:none;">
-                                    <span class="price-row__label">Original Total</span>
-                                    <span class="price-row__value" id="price-original"></span>
-                                </div>
-                                <div class="price-row price-row--discount" id="price-discount-row"
-                                    style="display:none; color:#16a34a;">
-                                    <span class="price-row__label">Discount (10%)</span>
-                                    <span class="price-row__value" id="price-discount"></span>
-                                </div>
-                                <div class="price-divider"></div>
-                                <div class="price-row price-row--total">
-                                    <span class="price-row__label">Total</span>
-                                    <span class="price-row__value" id="price-total">₦5,000</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Personalization (custom only) -->
-                    <div class="form-block" id="custom-section" style="display:none;">
-                        <div class="form-block__head">
-                            <div class="form-block__step">Step 4 — Optional</div>
+                            <div class="form-block__step">Step 2 — Optional</div>
                             <div class="form-block__title">Back Print Personalization</div>
                         </div>
                         <div class="form-block__body">
+                            <p class="form-hint" style="margin-bottom:1rem;">Only applies to customized designs in
+                                your cart — leave blank to skip.</p>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label" for="custom-name">Name on Back</label>
@@ -419,10 +334,10 @@
                         </div>
                     </div>
 
-                    <!-- 5. Payment Method -->
+                    <!-- 3. Payment Method -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 5</div>
+                            <div class="form-block__step">Step 3</div>
                             <div class="form-block__title">Payment Method</div>
                         </div>
                         <div class="form-block__body">
@@ -453,10 +368,10 @@
                         </div>
                     </div>
 
-                    <!-- 6. Receipt Upload -->
+                    <!-- 4. Receipt Upload -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 6</div>
+                            <div class="form-block__step">Step 4</div>
                             <div class="form-block__title">Upload Payment Receipt</div>
                         </div>
                         <div class="form-block__body">
@@ -479,10 +394,10 @@
                         </div>
                     </div>
 
-                    <!-- 7. Your Details -->
+                    <!-- 5. Your Details -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 7</div>
+                            <div class="form-block__step">Step 5</div>
                             <div class="form-block__title">Your Details</div>
                         </div>
                         <div class="form-block__body">

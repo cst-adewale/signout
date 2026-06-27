@@ -31,8 +31,6 @@ const state = {
     shirtType: 'plain',
     designId: null,
     designName: null,
-    size: '',
-    qty: 1,
     customName: '',
     customNumber: '',
     paymentMethod: 'bank-transfer',
@@ -52,6 +50,13 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const fmt = (n) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(n);
 
+const PLAIN_SHIRT_ITEM = {
+    id: 'PLAIN',
+    name: 'Plain White T-Shirt',
+    src: 'assets/plain-shirt.webp',
+    type: 'plain',
+};
+
 const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
     const num = i + 1;
     const id = `D${String(num).padStart(2, '0')}`;
@@ -59,6 +64,7 @@ const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
         id,
         name: `Design ${String(num).padStart(2, '0')}`,
         src: `assets/des${num}.webp`,
+        type: 'custom',
     };
 });
 
@@ -138,33 +144,29 @@ async function fetchUserOrders() {
 }
 
 // ─── Pricing ─────────────────────────────────────────────────────────────────
+// Each cart item carries its own `type` ('plain' | 'custom'), so mixed carts
+// (plain shirts + designed shirts together) price correctly per line item
+// instead of relying on one global shirt-type toggle.
 
-function calcPrice() {
-    const unit = CONFIG.prices[state.shirtType];
-    const subtotal = unit * state.qty;
-    const bulk = state.qty >= CONFIG.bulkThreshold;
-    const discount = bulk ? subtotal * CONFIG.bulkDiscount : 0;
-    return { unit, subtotal, discount, total: subtotal - discount, bulk };
+function priceForItem(item) {
+    return CONFIG.prices[item.type] || CONFIG.prices.plain;
 }
 
-function refreshPricing() {
-    const p = calcPrice();
+function calcCartTotals() {
+    let totalQty = 0;
+    let totalPrice = 0;
 
-    $('#price-unit').textContent = fmt(p.unit);
-    $('#price-total').textContent = fmt(p.total);
+    state.cart.forEach(item => {
+        const itemPrice = priceForItem(item);
+        totalQty += item.qty;
+        totalPrice += itemPrice * item.qty;
+    });
 
-    const bulkBanner = $('#bulk-banner');
-    if (p.bulk) {
-        bulkBanner.classList.add('show');
-        $('#price-original-row').style.display = 'flex';
-        $('#price-discount-row').style.display = 'flex';
-        $('#price-original').textContent = fmt(p.subtotal);
-        $('#price-discount').textContent = `−${fmt(p.discount)}`;
-    } else {
-        bulkBanner.classList.remove('show');
-        $('#price-original-row').style.display = 'none';
-        $('#price-discount-row').style.display = 'none';
-    }
+    const hasBulkDiscount = totalQty >= CONFIG.bulkThreshold;
+    const discount = hasBulkDiscount ? totalPrice * CONFIG.bulkDiscount : 0;
+    const finalTotal = totalPrice - discount;
+
+    return { totalQty, totalPrice, discount, finalTotal, hasBulkDiscount };
 }
 
 // ─── Payment Info Box ─────────────────────────────────────────────────────────
@@ -191,18 +193,6 @@ function selectDesign(id, name) {
         c.classList.toggle('selected', c.dataset.id === id)
     );
 
-    // Update form display
-    const display = $('#design-display');
-    if (display) {
-        display.textContent = `✓ ${name} (${id}) selected`;
-        display.classList.add('has-design');
-    }
-
-    const selectEl = $('#selected-design-id');
-    if (selectEl) {
-        selectEl.value = id;
-    }
-
     // Scroll to order form
     const orderFormSection = $('#order-form');
     if (orderFormSection) {
@@ -215,10 +205,18 @@ function addToCart(design) {
     if (existing) {
         existing.qty += 1;
     } else {
-        state.cart.push({ id: design.id, name: design.name, src: design.src, qty: 1 });
+        state.cart.push({
+            id: design.id,
+            name: design.name,
+            src: design.src,
+            type: design.type || (design.id === 'PLAIN' ? 'plain' : 'custom'),
+            qty: 1,
+            size: 'M'
+        });
     }
     persistCart();
     renderCart();
+    syncGallerySelectionState();
     Swal.fire({
         title: 'Added to Cart',
         text: `${design.name} has been added to your cart.`,
@@ -226,6 +224,26 @@ function addToCart(design) {
         confirmButtonColor: '#000000',
         timer: 1400,
         showConfirmButton: false
+    });
+}
+
+function removeFromCartById(id) {
+    state.cart = state.cart.filter(x => x.id !== id);
+    persistCart();
+    renderCart();
+    syncGallerySelectionState();
+}
+
+// Keep gallery "Select"/"Remove" button states in sync with what's actually in the cart,
+// so users can deselect a design directly from the gallery, not just from the cart list.
+function syncGallerySelectionState() {
+    $$('.gallery-select-btn').forEach(btn => {
+        const id = btn.dataset.id;
+        const inCart = state.cart.some(item => item.id === id);
+        btn.textContent = inCart ? 'Remove' : 'Select Design';
+        btn.classList.toggle('btn-primary', !inCart);
+        btn.classList.toggle('btn-secondary', inCart);
+        btn.closest('.gallery-card')?.classList.toggle('selected', inCart);
     });
 }
 
@@ -239,6 +257,10 @@ function restoreCart() {
     try {
         const raw = sessionStorage.getItem('sos_cart');
         state.cart = raw ? JSON.parse(raw) : [];
+        // Backfill `type` for any carts saved before per-item pricing existed.
+        state.cart.forEach(item => {
+            if (!item.type) item.type = item.id === 'PLAIN' ? 'plain' : 'custom';
+        });
     } catch (_) {
         state.cart = [];
     }
@@ -254,50 +276,133 @@ function renderCart() {
         empty.style.display = 'block';
         items.style.display = 'none';
         if (selectedId) selectedId.value = '';
+        updateCartPriceSummary();
         return;
     }
 
     empty.style.display = 'none';
     items.style.display = 'flex';
     items.innerHTML = state.cart.map(item => `
-        <div class="gallery-card" style="display:grid;grid-template-columns:90px 1fr;gap:1rem;align-items:center;">
+        <div class="gallery-card" style="display:grid;grid-template-columns:90px 1fr;gap:1rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid #e5e7eb;">
             <img src="${item.src}" alt="${item.id}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;">
             <div>
                 <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;">
                     <strong>${item.name}</strong>
-                    <span class="design-tag">${item.id}</span>
+                    <span class="design-tag">${item.type === 'plain' ? 'Plain' : item.id}</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem;">
-                    <button type="button" class="qty-stepper__btn cart-dec" data-id="${item.id}">−</button>
-                    <span>${item.qty}</span>
-                    <button type="button" class="qty-stepper__btn cart-inc" data-id="${item.id}">+</button>
-                    <button type="button" class="btn btn-secondary btn-sm cart-remove" data-id="${item.id}" style="margin-left:auto;">Remove</button>
+
+                <!-- Size Dropdown for this item -->
+                <div style="display:flex;gap:1rem;align-items:center;margin-top:.75rem;">
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:0.25rem;">Size</label>
+                        <select class="form-select cart-size-select" data-id="${item.id}" style="width:100%;">
+                            <option value="XS" ${item.size === 'XS' ? 'selected' : ''}>XS</option>
+                            <option value="S" ${item.size === 'S' ? 'selected' : ''}>S</option>
+                            <option value="M" ${item.size === 'M' ? 'selected' : ''}>M</option>
+                            <option value="L" ${item.size === 'L' ? 'selected' : ''}>L</option>
+                            <option value="XL" ${item.size === 'XL' ? 'selected' : ''}>XL</option>
+                            <option value="XXL" ${item.size === 'XXL' ? 'selected' : ''}>2XL</option>
+                            <option value="3XL" ${item.size === '3XL' ? 'selected' : ''}>3XL</option>
+                        </select>
+                    </div>
+
+                    <!-- Quantity Stepper -->
+                    <div style="flex:0.8;">
+                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:0.25rem;">Qty</label>
+                        <div class="qty-stepper">
+                            <button type="button" class="qty-stepper__btn cart-dec" data-id="${item.id}">−</button>
+                            <span style="padding:0 0.5rem;">${item.qty}</span>
+                            <button type="button" class="qty-stepper__btn cart-inc" data-id="${item.id}">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Remove Button -->
+                    <button type="button" class="btn btn-secondary btn-sm cart-remove" data-id="${item.id}" style="align-self:flex-end;">Remove</button>
                 </div>
             </div>
         </div>
     `).join('');
 
+    // Size change handlers
+    items.querySelectorAll('.cart-size-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const item = state.cart.find(x => x.id === e.target.dataset.id);
+            if (item) {
+                item.size = e.target.value;
+                persistCart();
+                updateCartPriceSummary();
+            }
+        });
+    });
+
+    // Quantity handlers
     items.querySelectorAll('.cart-dec').forEach(btn => btn.onclick = () => {
         const item = state.cart.find(x => x.id === btn.dataset.id);
         if (!item) return;
         item.qty = Math.max(1, item.qty - 1);
         persistCart();
         renderCart();
+        updateCartPriceSummary();
     });
+
     items.querySelectorAll('.cart-inc').forEach(btn => btn.onclick = () => {
         const item = state.cart.find(x => x.id === btn.dataset.id);
         if (!item) return;
         item.qty += 1;
         persistCart();
         renderCart();
+        updateCartPriceSummary();
     });
+
     items.querySelectorAll('.cart-remove').forEach(btn => btn.onclick = () => {
-        state.cart = state.cart.filter(x => x.id !== btn.dataset.id);
-        persistCart();
-        renderCart();
+        removeFromCartById(btn.dataset.id);
+        updateCartPriceSummary();
     });
 
     if (selectedId && state.cart[0]) selectedId.value = state.cart[0].id;
+    updateCartPriceSummary();
+}
+
+function updateCartPriceSummary() {
+    const totals = calcCartTotals();
+    const summary = document.querySelector('#cart-price-summary');
+
+    if (!summary) return;
+
+    let html = `
+        <div class="price-box" style="margin-top:1rem;border-top:1px solid #e5e7eb;padding-top:1rem;">
+            <div class="price-row" style="display:flex;justify-content:space-between;padding:0.5rem 0;">
+                <span>Total Shirts</span>
+                <strong>${totals.totalQty}</strong>
+            </div>
+            <div class="price-row" style="display:flex;justify-content:space-between;padding:0.5rem 0;">
+                <span>Subtotal</span>
+                <strong>${fmt(totals.totalPrice)}</strong>
+            </div>
+    `;
+
+    if (totals.hasBulkDiscount) {
+        html += `
+            <div class="price-row price-row--discount" style="display:flex;justify-content:space-between;padding:0.5rem 0;color:#16a34a;">
+                <span>10% Bulk Discount</span>
+                <strong>−${fmt(totals.discount)}</strong>
+            </div>
+            <div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:0.75rem;margin:0.75rem 0;font-size:0.875rem;color:#166534;">
+                <strong>✓ 10% discount applied!</strong> You have ${totals.totalQty} shirts in your cart — that's 5 or more, so 10% has already been taken off your total.
+            </div>
+        `;
+    }
+
+    html += `
+            <div class="price-divider" style="border-top:2px solid #e5e7eb;margin:0.75rem 0;"></div>
+            <div class="price-row price-row--total" style="display:flex;justify-content:space-between;padding:0.75rem 0;font-size:1.1rem;">
+                <span><strong>Total</strong></span>
+                <strong>${fmt(totals.finalTotal)}</strong>
+            </div>
+        </div>
+    `;
+
+    summary.innerHTML = html;
 }
 
 function persistSelectedDesign(id, name, src) {
@@ -326,17 +431,22 @@ function initGallery() {
     const closeBtn = $('#modal-close');
     const selectBtn = $('#modal-select');
 
+    // Plain White T-Shirt is rendered as the first tile in the gallery grid,
+    // followed by the regular design catalog — same card markup, same
+    // select/preview/cart behavior for all of them.
+    const galleryItems = [PLAIN_SHIRT_ITEM, ...DESIGN_CATALOG.slice(0, INITIAL_GALLERY_COUNT)];
+
     if (grid && !grid.dataset.rendered) {
-        grid.innerHTML = DESIGN_CATALOG.slice(0, INITIAL_GALLERY_COUNT).map(design => `
-            <div class="gallery-card" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}">
+        grid.innerHTML = galleryItems.map(design => `
+            <div class="gallery-card" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}" data-type="${design.type}">
                 <div class="gallery-card__img-wrap">
                     <img src="${design.src}" alt="${design.id}" loading="lazy" decoding="async">
                     <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span></div>
                 </div>
                 <div class="gallery-card__foot">
-                    <span class="design-tag">${design.id}</span>
+                    <span class="design-tag">${design.type === 'plain' ? 'Plain' : design.id}</span>
                     <span class="gallery-card__name">${design.name}</span>
-                    <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}">Select Design</button>
+                    <button type="button" class="btn btn-primary btn-sm gallery-select-btn" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}" data-type="${design.type}">Select Design</button>
                 </div>
             </div>
         `).join('');
@@ -354,10 +464,13 @@ function initGallery() {
 
             modalImg.src = src;
             modalImg.alt = name;
-            modalTag.textContent = id;
+            modalTag.textContent = id === 'PLAIN' ? 'Plain' : id;
             modalName.textContent = name;
             selectBtn.dataset.id = id;
             selectBtn.dataset.name = name;
+            selectBtn.dataset.src = src;
+            selectBtn.dataset.type = card.dataset.type;
+            selectBtn.textContent = state.cart.some(item => item.id === id) ? 'Remove From Cart' : 'Select This Design';
 
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
@@ -365,17 +478,26 @@ function initGallery() {
         });
     });
 
-    // Handle immediate select design button clicks
+    // Handle immediate select/remove button clicks — acts as a toggle so users
+    // can pick and unpick designs (and the plain shirt) directly from the gallery.
     $$('.gallery-select-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = btn.dataset.id;
             const name = btn.dataset.name;
             const src = btn.dataset.src || `assets/des${Number(id.slice(1))}.webp`;
-            addToCart({ id, name, src });
-            // Only show the sweet alert, no automatic scroll or selectDesign
+            const type = btn.dataset.type || 'custom';
+
+            const alreadyInCart = state.cart.some(item => item.id === id);
+            if (alreadyInCart) {
+                removeFromCartById(id);
+            } else {
+                addToCart({ id, name, src, type });
+            }
         });
     });
+
+    syncGallerySelectionState();
 
     function closeModal() {
         modal.classList.remove('active');
@@ -391,43 +513,17 @@ function initGallery() {
         const id = selectBtn.dataset.id;
         const name = selectBtn.dataset.name;
         const src = selectBtn.dataset.src || modalImg.src;
+        const type = selectBtn.dataset.type || 'custom';
 
-        persistSelectedDesign(id, name, src);
-        addToCart({ id, name, src });
-        // Only add to cart and show sweet alert, no automatic selectDesign
+        const alreadyInCart = state.cart.some(item => item.id === id);
+        if (alreadyInCart) {
+            removeFromCartById(id);
+        } else {
+            persistSelectedDesign(id, name, src);
+            addToCart({ id, name, src, type });
+        }
         closeModal();
     });
-}
-
-// ─── Shirt Type Toggle ────────────────────────────────────────────────────────
-
-function initShirtType() {
-    $$('input[name="shirt-type"]').forEach(radio => {
-        radio.addEventListener('change', e => {
-            state.shirtType = e.target.value;
-            $('#custom-section').style.display =
-                state.shirtType === 'custom' ? 'block' : 'none';
-            refreshPricing();
-        });
-    });
-}
-
-// ─── Quantity Stepper ─────────────────────────────────────────────────────────
-
-function initQty() {
-    const input = $('#qty-input');
-    const dec = $('#qty-dec');
-    const inc = $('#qty-inc');
-
-    function setQty(n) {
-        state.qty = Math.max(1, Math.min(100, n));
-        input.value = state.qty;
-        refreshPricing();
-    }
-
-    dec.addEventListener('click', () => setQty(state.qty - 1));
-    inc.addEventListener('click', () => setQty(state.qty + 1));
-    input.addEventListener('change', () => setQty(parseInt(input.value) || 1));
 }
 
 // ─── Payment Method ───────────────────────────────────────────────────────────
@@ -645,10 +741,15 @@ function validate() {
         Swal.fire('No Design Selected', 'Please add at least one design to your cart.', 'warning');
         return false;
     }
-    if (!$('#size-select').value) {
-        Swal.fire('No Size Selected', 'Please choose a shirt size.', 'warning');
-        return false;
+
+    // Check if all cart items have sizes selected
+    for (let item of state.cart) {
+        if (!item.size) {
+            Swal.fire('Missing Size', `Please select a size for ${item.name}.`, 'warning');
+            return false;
+        }
     }
+
     if (!state.receipt) {
         Swal.fire('No Receipt', 'Please upload your payment receipt.', 'warning');
         return false;
@@ -690,15 +791,13 @@ async function handleSubmit(e) {
     btn.disabled = true;
     btn.textContent = 'Submitting…';
 
-    const pricing = calcPrice();
+    const pricing = calcCartTotals();
     const order = {
         id: genId(),
         createdAt: new Date().toISOString(),
         shirtType: state.shirtType,
         design: { id: state.cart[0].id, name: state.cart[0].name },
         cartItems: state.cart,
-        size: $('#size-select').value,
-        qty: state.qty,
         customization: {
             name: $('#custom-name').value.trim(),
             number: $('#custom-number').value.trim(),
@@ -709,10 +808,10 @@ async function handleSubmit(e) {
         receipt: state.receipt,
         customDesign: state.customDesign,
         pricing: {
-            unit: pricing.unit,
-            subtotal: pricing.subtotal,
+            totalQty: pricing.totalQty,
+            subtotal: pricing.totalPrice,
             discount: pricing.discount,
-            total: pricing.total,
+            total: pricing.finalTotal,
         },
         customer: {
             name: $('#cust-name').value.trim(),
@@ -756,7 +855,7 @@ async function handleSubmit(e) {
                         <span style="color:#4b5563;">Design</span><strong>${order.design.name}</strong>
                     </div>
                     <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #e5e7eb;">
-                        <span style="color:#4b5563;">Qty × Size</span><strong>${order.qty} × ${order.size}</strong>
+                        <span style="color:#4b5563;">Total Shirts</span><strong>${order.pricing.totalQty}</strong>
                     </div>
                     <div style="display:flex;justify-content:space-between;padding:.4rem 0;">
                         <span style="color:#4b5563;">Total Paid</span><strong>${fmt(order.pricing.total)}</strong>
@@ -815,25 +914,21 @@ function resetForm() {
     state.designId = null;
     state.designName = null;
     state.shirtType = 'plain';
-    state.qty = 1;
     state.receipt = null;
     state.customDesign = null;
     state.cart = [];
     persistCart();
 
-    const display = $('#design-display');
-    display.textContent = 'No design selected — browse above';
-    display.classList.remove('has-design');
     $('#selected-design-id').value = '';
     renderCart();
+    syncGallerySelectionState();
 
     $$('.gallery-card').forEach(c => c.classList.remove('selected'));
 
     $('#file-preview').classList.remove('show');
     $('#custom-design-preview')?.classList.remove('show');
-    $('#custom-section').style.display = 'none';
 
-    refreshPricing();
+    updateCartPriceSummary();
     renderPaymentInfo();
 }
 
@@ -874,12 +969,8 @@ function renderMyOrders() {
                         <span>${order.shirtType === 'custom' ? 'Customized' : 'Plain'}</span>
                     </div>
                     <div class="order-card__row">
-                        <span>Size</span>
-                        <span>${order.size}</span>
-                    </div>
-                    <div class="order-card__row">
-                        <span>Qty</span>
-                        <span>${order.qty}</span>
+                        <span>Total Shirts</span>
+                        <span>${order.pricing.totalQty}</span>
                     </div>
                     <div class="order-card__row">
                         <span>Payment</span>
@@ -1187,11 +1278,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     initNav();
     initGallery();
     initCustomDesignUpload();
-    initShirtType();
-    initQty();
     initPayment();
     initUpload();
-    refreshPricing();
+    updateCartPriceSummary();
 
     $('#main-form').addEventListener('submit', handleSubmit);
     restoreSelectedDesign();
