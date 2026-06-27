@@ -309,32 +309,28 @@
                         </div>
                     </div>
 
-                    <!-- 2. Design -->
+                    <!-- 2. Cart -->
                     <div class="form-block">
                         <div class="form-block__head">
                             <div class="form-block__step">Step 2</div>
                             <div class="form-block__title">Cart</div>
                         </div>
                         <div class="form-block__body">
-                            <input type="hidden" id="selected-design-id" required>
-                            <div class="design-display" id="design-display">
-                                No designs in cart yet — <a href="#gallery" class="form-link">browse above</a>
+                            <div id="cart-empty" class="empty-state" style="display:block;">
+                                <div class="empty-state__icon">??</div>
+                                <h3 class="empty-state__title">No designs added yet</h3>
+                                <p class="empty-state__msg">Add one or more designs before placing your order.</p>
                             </div>
+                            <div id="cart-items" style="display:none;gap:1rem;flex-direction:column;"></div>
                         </div>
                     </div>
-
                     <!-- 3. Size & Quantity -->
                     <div class="form-block">
                         <div class="form-block__head">
-                            <div class="form-block__step">Step 4</div>
+                            <div class="form-block__step">Step 3</div>
                             <div class="form-block__title">Size &amp; Quantity</div>
                         </div>
                         <div class="form-block__body">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label" for="size-select">
-                                        Size <span class="req">*</span>
-                                    </label>
                                     <select id="size-select" class="form-select" required>
                                         <option value="">Choose size...</option>
                                         <option value="XS">Extra Small (XS)</option>
@@ -515,21 +511,6 @@
                     <!-- Submit -->
                     <div class="form-block">
                         <div class="form-block__body">
-                            <div class="form-block" style="margin-bottom:1.5rem;">
-                                <div class="form-block__head">
-                                    <div class="form-block__step">Cart</div>
-                                    <div class="form-block__title">Selected Designs</div>
-                                </div>
-                                <div class="form-block__body">
-                                    <div id="cart-empty" class="empty-state" style="display:block;">
-                                        <div class="empty-state__icon">🛒</div>
-                                        <h3 class="empty-state__title">No designs added yet</h3>
-                                        <p class="empty-state__msg">Add one or more designs before placing your order.</p>
-                                    </div>
-                                    <div id="cart-items" style="display:none;gap:1rem;flex-direction:column;"></div>
-                                </div>
-                            </div>
-                            <div class="checkbox-row" style="margin-bottom:1.5rem;">
                                 <input type="checkbox" id="terms" required>
                                 <label for="terms">I have made payment and uploaded my receipt. I agree to the terms of
                                     this order.</label>
@@ -592,3 +573,4 @@
 </body>
 
 </html>
+
