@@ -219,6 +219,14 @@ function addToCart(design) {
     }
     persistCart();
     renderCart();
+    Swal.fire({
+        title: 'Added to Cart',
+        text: `${design.name} has been added to your cart.`,
+        icon: 'success',
+        confirmButtonColor: '#000000',
+        timer: 1400,
+        showConfirmButton: false
+    });
 }
 
 function persistCart() {
