@@ -77,7 +77,7 @@ function genId() {
 function saveToken(token) {
     try {
         localStorage.setItem('sos_token', token);
-    } catch (_) {}
+    } catch (_) { }
 }
 
 function loadToken() {
@@ -91,7 +91,7 @@ function loadToken() {
 function removeToken() {
     try {
         localStorage.removeItem('sos_token');
-    } catch (_) {}
+    } catch (_) { }
 }
 
 // Fetch user profile from backend
@@ -232,7 +232,7 @@ function addToCart(design) {
 function persistCart() {
     try {
         sessionStorage.setItem('sos_cart', JSON.stringify(state.cart));
-    } catch (_) {}
+    } catch (_) { }
 }
 
 function restoreCart() {
@@ -303,7 +303,7 @@ function renderCart() {
 function persistSelectedDesign(id, name, src) {
     try {
         sessionStorage.setItem('sos_selected_design', JSON.stringify({ id, name, src }));
-    } catch (_) {}
+    } catch (_) { }
 }
 
 function restoreSelectedDesign() {
@@ -314,7 +314,7 @@ function restoreSelectedDesign() {
         if (design?.id && design?.name) {
             selectDesign(design.id, design.name);
         }
-    } catch (_) {}
+    } catch (_) { }
 }
 
 function initGallery() {
@@ -373,7 +373,7 @@ function initGallery() {
             const name = btn.dataset.name;
             const src = btn.dataset.src || `assets/des${Number(id.slice(1))}.webp`;
             addToCart({ id, name, src });
-            selectDesign(id, name);
+            // Only show the sweet alert, no automatic scroll or selectDesign
         });
     });
 
@@ -394,7 +394,7 @@ function initGallery() {
 
         persistSelectedDesign(id, name, src);
         addToCart({ id, name, src });
-        selectDesign(id, name);
+        // Only add to cart and show sweet alert, no automatic selectDesign
         closeModal();
     });
 }
@@ -964,7 +964,7 @@ function initAuth() {
 
     authModalClose.addEventListener('click', closeAuthModal);
     authModal.addEventListener('click', e => { if (e.target === authModal) closeAuthModal(); });
-    
+
     switchToSignup.addEventListener('click', (e) => {
         e.preventDefault();
         openAuthModal(true);
@@ -1006,7 +1006,7 @@ function initAuth() {
                 state.user = data.user;
                 closeAuthModal();
                 loginForm.reset();
-                
+
                 await updateUI();
                 syncCustomDesignGate();
                 Swal.fire('Success', `Welcome back, ${data.user.name}!`, 'success');
@@ -1159,7 +1159,7 @@ function initTheme() {
 
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         document.body.classList.add('dark');
         toggleBtn.textContent = '☀️';
