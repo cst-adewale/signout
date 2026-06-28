@@ -733,10 +733,127 @@
     margin-top: var(--sp-4);
     padding: var(--sp-4);
     border: 1px solid var(--color-success);
+    border-radius: var(--r-sm);
+    background: var(--color-success-bg);
 }
 
-.price-row--discount,
+.file-preview.show {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+}
+
+.file-preview__icon {
+    font-size: 1.75rem;
+}
+
+.file-preview__name {
+    font-weight: 500;
+    font-size: .9375rem;
+    word-break: break-word;
+}
+
+.file-preview__size {
+    font-size: .8125rem;
+    color: var(--color-text-sub);
+}
+
+.file-preview__remove {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    cursor: pointer;
+    font-weight: 700;
+    padding: var(--sp-1);
+    transition: var(--t-fast);
+}
+
+.file-preview__remove:hover {
+    opacity: .7;
+}
+
+/* ── Checkbox ────────────────────────────────────────────── */
+.checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+}
+
+.checkbox-row input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    margin-top: 1px;
+    flex-shrink: 0;
+    border: 2px solid var(--color-border, #d1d5db);
+    border-radius: 4px;
+    background: var(--color-bg, #fff);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.checkbox-row input[type="checkbox"]:checked {
+    background: var(--color-ink, #111);
+    border-color: var(--color-ink, #111);
+}
+
+.checkbox-row input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 6px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+
+.checkbox-row label {
+    font-size: .9375rem;
+    color: var(--color-text-sub);
+    cursor: pointer;
+    line-height: 1.5;
+}
+
+/* ── Pricing Summary ─────────────────────────────────────── */
+.price-box {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-sm);
+    padding: var(--sp-5);
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--sp-2) 0;
+    font-size: .9375rem;
+}
+
 .price-row__label {
+    color: var(--color-text-sub);
+    font-weight: 500;
+}
+
+.price-row__value {
+    font-weight: 600;
+    font-family: var(--font-head);
+}
+
+.price-row--strikethrough .price-row__value {
+    text-decoration: line-through;
+    opacity: .6;
+}
+
+.price-row--discount .price-row__label {
     color: var(--color-danger);
 }
 
