@@ -822,8 +822,8 @@ async function handleSubmit(e) {
         design: { id: state.cart[0].id, name: state.cart[0].name },
         cartItems: state.cart,
         customization: {
-            name: $('#custom-name').value.trim(),
-            number: $('#custom-number').value.trim(),
+            name: $('#custom-name')?.value.trim() || '',
+            number: $('#custom-number')?.value.trim() || '',
         },
         payment: {
             method: state.paymentMethod,

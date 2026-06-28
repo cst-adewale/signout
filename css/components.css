@@ -733,32 +733,10 @@
     margin-top: var(--sp-4);
     padding: var(--sp-4);
     border: 1px solid var(--color-success);
-    border-radius: var(--r-sm);
-    background: var(--color-success-bg);
 }
 
-.file-preview.show {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-4);
-}
-
-.file-preview__icon {
-    font-size: 1.75rem;
-}
-
-.file-preview__name {
-.price-row__value {
-    font-weight: 600;
-    font-family: var(--font-head);
-}
-
-.price-row--strikethrough .price-row__value {
-    text-decoration: line-through;
-    opacity: .6;
-}
-
-.price-row--discount .price-row__label {
+.price-row--discount,
+.price-row__label {
     color: var(--color-danger);
 }
 
