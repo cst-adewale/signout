@@ -309,19 +309,18 @@ function renderCart() {
     empty.style.display = 'none';
     items.style.display = 'flex';
     items.innerHTML = state.cart.map(item => `
-        <div class="gallery-card" style="display:grid;grid-template-columns:90px 1fr;gap:1rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid #e5e7eb;">
-            <img src="${item.src}" alt="${item.id}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;">
-            <div>
-                <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;">
-                    <strong>${item.name}</strong>
+        <div class="cart-item-card">
+            <img class="cart-item-card__img" src="${item.src}" alt="${item.id}">
+            <div class="cart-item-card__body">
+                <div class="cart-item-card__head">
+                    <strong class="cart-item-card__name">${item.name}</strong>
                     <span class="design-tag">${item.type === 'plain' ? 'Plain' : item.id}</span>
                 </div>
 
-                <!-- Size Dropdown for this item -->
-                <div style="display:flex;gap:1rem;align-items:center;margin-top:.75rem;">
-                    <div style="flex:1;">
-                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:0.25rem;">Size</label>
-                        <select class="form-select cart-size-select" data-id="${item.id}" style="width:100%;">
+                <div class="cart-item-card__controls">
+                    <div class="cart-item-card__field">
+                        <label class="cart-item-card__label">Size</label>
+                        <select class="form-select cart-size-select" data-id="${item.id}">
                             <option value="XS" ${item.size === 'XS' ? 'selected' : ''}>XS</option>
                             <option value="S" ${item.size === 'S' ? 'selected' : ''}>S</option>
                             <option value="M" ${item.size === 'M' ? 'selected' : ''}>M</option>
@@ -332,18 +331,16 @@ function renderCart() {
                         </select>
                     </div>
 
-                    <!-- Quantity Stepper -->
-                    <div style="flex:0.8;">
-                        <label style="display:block;font-size:0.8rem;color:#6b7280;margin-bottom:0.25rem;">Qty</label>
+                    <div class="cart-item-card__field">
+                        <label class="cart-item-card__label">Qty</label>
                         <div class="qty-stepper">
                             <button type="button" class="qty-stepper__btn cart-dec" data-id="${item.id}">−</button>
-                            <span style="padding:0 0.5rem;">${item.qty}</span>
+                            <span class="qty-stepper__value">${item.qty}</span>
                             <button type="button" class="qty-stepper__btn cart-inc" data-id="${item.id}">+</button>
                         </div>
                     </div>
 
-                    <!-- Remove Button -->
-                    <button type="button" class="btn btn-secondary btn-sm cart-remove" data-id="${item.id}" style="align-self:flex-end;">Remove</button>
+                    <button type="button" class="btn btn-secondary btn-sm cart-remove" data-id="${item.id}">Remove</button>
                 </div>
             </div>
         </div>
