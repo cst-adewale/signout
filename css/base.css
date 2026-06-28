@@ -404,4 +404,16 @@ body.dark .btn-secondary:hover {
 body.dark .nav__links.open {
     background: var(--color-bg);
 }
+
+/* Ensure text on green backgrounds (receipt, discount) stays black/dark in dark mode */
+body.dark .file-preview,
+body.dark .file-preview__name {
+    color: #000000 !important;
+}
+body.dark .file-preview__size {
+    color: #374151 !important;
+}
+body.dark .discount-banner {
+    color: #000000 !important;
+}
 

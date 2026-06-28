@@ -20,19 +20,30 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'sos_secret_key_2026_class';
 
-// ─── Self-Pinger for Render ───────────────────────────────────────────────────
+// ─── Self-Pinger for Render (Keep-Alive) ──────────────────────────────────────
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
 if (RENDER_URL) {
-    console.log(`📡 Self-pinger initialized for: ${RENDER_URL}`);
-    // Ping every 10 minutes to prevent Render free-tier spin-down
-    setInterval(() => {
+    const HEALTH_URL = `${RENDER_URL}/health`;
+    console.log(`✅ Keep-Alive initialized. Will ping ${HEALTH_URL} every 14 minutes`);
+    
+    // First ping after 30 seconds
+    setTimeout(pingSelf, 30000);
+    
+    // Then ping every 14 minutes
+    setInterval(pingSelf, 14 * 60 * 1000);
+
+    function pingSelf() {
         const protocol = RENDER_URL.startsWith('https') ? require('https') : require('http');
-        protocol.get(RENDER_URL, (res) => {
-            console.log(`📡 Self-ping status: ${res.statusCode}`);
+        protocol.get(HEALTH_URL, (res) => {
+            if (res.statusCode === 200) {
+                console.log(`[KeepAlive] ✅ Pinged successfully at ${new Date().toISOString()}`);
+            } else {
+                console.warn(`[KeepAlive] ⚠️ Ping returned status ${res.statusCode}`);
+            }
         }).on('error', (err) => {
-            console.error('📡 Self-ping failed:', err.message);
+            console.error(`[KeepAlive] ❌ Ping failed:`, err.message);
         });
-    }, 10 * 60 * 1000);
+    }
 }
 
 // Enable GZIP compression to load images/JS/CSS assets faster
@@ -764,6 +775,11 @@ app.get('/api/users', async (req, res) => {
         console.error('Error fetching users:', err.message);
         res.status(500).json({ success: false, message: 'Server error. Failed to fetch users.' });
     }
+});
+
+// 9. Health Endpoint (used by keep-alive / pinger)
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // ─── Global Error Handler ────────────────────────────────────────────────────

@@ -113,15 +113,17 @@ async function loadData(forceRefresh = false) {
 
         const headers = { 'x-admin-password': state.password };
 
-        // Fetch analytics & orders in parallel for maximum speed
-        const [resAnalytics, resOrders] = await Promise.all([
+        // Fetch analytics, orders, and users in parallel for maximum speed
+        const [resAnalytics, resOrders, resUsers] = await Promise.all([
             fetch('/api/analytics', { headers }),
-            fetch('/api/orders', { headers })
+            fetch('/api/orders', { headers }),
+            fetch('/api/users', { headers })
         ]);
 
-        const [dataAnalytics, dataOrders] = await Promise.all([
+        const [dataAnalytics, dataOrders, dataUsers] = await Promise.all([
             resAnalytics.json(),
-            resOrders.json()
+            resOrders.json(),
+            resUsers.json()
         ]);
 
         if (dataAnalytics.success) {
@@ -136,12 +138,52 @@ async function loadData(forceRefresh = false) {
             renderOrders();
         }
 
+        if (dataUsers.success) {
+            renderUsers(dataUsers.users);
+        }
+
         state.lastLoadTime = now;
 
     } catch (err) {
         console.error('Error loading admin dashboard data:', err);
-        Swal.fire('Data Load Error', 'Failed to fetch analytics or orders.', 'error');
+        Swal.fire('Data Load Error', 'Failed to fetch analytics, orders, or users.', 'error');
     }
+}
+
+// ─── Render Users ────────────────────────────────────────────────────────────
+function renderUsers(users) {
+    const container = $('#admin-users-list');
+    if (!container) return;
+
+    if (!users || users.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="padding: 2rem 0;">
+                <div class="empty-state__icon">👥</div>
+                <h3 class="empty-state__title">No users registered yet</h3>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = users.map(user => {
+        const date = new Date(user.createdAt).toLocaleDateString('en-NG', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        return `
+            <div style="background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-4); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <strong style="font-size: 1rem; color: var(--color-ink);">${user.name}</strong>
+                    <div style="font-size: .85rem; color: var(--color-text-sub);">${user.email}</div>
+                    <div style="font-size: .8rem; color: var(--color-text-faint);">Registered: ${date}</div>
+                </div>
+                <div style="font-size: .9rem; text-align: right;">
+                    <div><strong>WhatsApp:</strong> <a href="https://wa.me/${user.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #25d366; text-decoration: underline; font-weight: 500;">${user.whatsapp} 💬</a></div>
+                    <div><strong>Location:</strong> ${user.location}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // ─── Render Stats ────────────────────────────────────────────────────────────

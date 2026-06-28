@@ -410,7 +410,7 @@ function updateCartPriceSummary() {
                 <span>10% Bulk Discount</span>
                 <strong>−${fmt(totals.discount)}</strong>
             </div>
-            <div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:0.75rem;margin:0.75rem 0;font-size:0.875rem;color:#166534;">
+            <div class="discount-banner" style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:0.75rem;margin:0.75rem 0;font-size:0.875rem;color:#166534;">
                 <strong>✓ 10% discount applied!</strong> You have ${totals.totalQty} shirts in your cart — that's 5 or more, so 10% has already been taken off your total.
             </div>
         `;
