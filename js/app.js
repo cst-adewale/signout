@@ -174,12 +174,38 @@ function calcCartTotals() {
 function renderPaymentInfo() {
     const rows = CONFIG.paymentDetails[state.paymentMethod] || [];
     const box = $('#payment-info-box');
-    box.innerHTML = rows.map(r => `
-        <div class="payment-info-row">
+    box.innerHTML = rows.map(r => {
+        const isCopyableAccount = state.paymentMethod === 'bank-transfer' && r.label === 'Account Number';
+        return `
+        <div class="payment-info-row" style="display:flex;justify-content:space-between;gap:1rem;align-items:center;">
             <span>${r.label}</span>
-            <span>${r.value}</span>
+            <span style="display:inline-flex;align-items:center;gap:0.5rem;">
+                <span>${r.value}</span>
+                ${isCopyableAccount ? `<button type="button" class="btn btn-secondary btn-sm copy-account-btn" data-copy-value="${r.value}">Copy</button>` : ''}
+            </span>
         </div>
-    `).join('');
+    `;
+    }).join('');
+
+    box.querySelectorAll('.copy-account-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const value = btn.dataset.copyValue || '';
+            try {
+                await navigator.clipboard.writeText(value);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Account copied',
+                    showConfirmButton: false,
+                    timer: 1400,
+                    timerProgressBar: true,
+                });
+            } catch (_) {
+                Swal.fire('Copy failed', 'Please copy the account number manually.', 'error');
+            }
+        });
+    });
 }
 
 // ─── Gallery & Modal ──────────────────────────────────────────────────────────
