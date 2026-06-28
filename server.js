@@ -20,6 +20,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'sos_secret_key_2026_class';
 
+// ─── Self-Pinger for Render ───────────────────────────────────────────────────
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+if (RENDER_URL) {
+    console.log(`📡 Self-pinger initialized for: ${RENDER_URL}`);
+    // Ping every 10 minutes to prevent Render free-tier spin-down
+    setInterval(() => {
+        const protocol = RENDER_URL.startsWith('https') ? require('https') : require('http');
+        protocol.get(RENDER_URL, (res) => {
+            console.log(`📡 Self-ping status: ${res.statusCode}`);
+        }).on('error', (err) => {
+            console.error('📡 Self-ping failed:', err.message);
+        });
+    }, 10 * 60 * 1000);
+}
+
 // Enable GZIP compression to load images/JS/CSS assets faster
 app.use(compression());
 
@@ -731,6 +746,23 @@ app.get('/api/analytics', async (req, res) => {
     } catch (err) {
         console.error('Error computing analytics:', err);
         res.status(500).json({ success: false, message: 'Server error. Failed to compute analytics.' });
+    }
+});
+
+// 8. Get All Registered Users (Admin Panel)
+app.get('/api/users', async (req, res) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        const expected = process.env.ADMIN_PASSWORD || 'admin123';
+        if (password !== expected) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        res.json({ success: true, users });
+    } catch (err) {
+        console.error('Error fetching users:', err.message);
+        res.status(500).json({ success: false, message: 'Server error. Failed to fetch users.' });
     }
 });
 
