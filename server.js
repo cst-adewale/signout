@@ -56,10 +56,11 @@ const OrderSchema = new mongoose.Schema({
         id: { type: String, required: true },
         name: { type: String, required: true },
         src: { type: String, default: '' },
-        qty: { type: Number, default: 1 }
+        qty: { type: Number, default: 1 },
+        size: { type: String, default: 'M' }
     }],
-    size: { type: String, required: true },
-    qty: { type: Number, required: true },
+    size: { type: String },
+    qty: { type: Number },
     customization: {
         name: { type: String, default: '' },
         number: { type: String, default: '' }
@@ -325,6 +326,16 @@ app.get('/api/orders/my', authenticateToken, async (req, res) => {
 app.post('/api/orders', authenticateToken, async (req, res) => {
     try {
         const orderData = req.body;
+        
+        // Auto-calculate top-level size and qty if not provided (for backward compatibility / analytics)
+        if (!orderData.qty) {
+            orderData.qty = orderData.pricing?.totalQty || 
+                            (orderData.cartItems && orderData.cartItems.reduce((sum, item) => sum + (item.qty || 1), 0)) || 1;
+        }
+        if (!orderData.size) {
+            orderData.size = (orderData.cartItems && orderData.cartItems.map(item => item.size).filter(Boolean).join(', ')) || 'M';
+        }
+
         const newOrder = new Order({
             ...orderData,
             userId: req.user.id

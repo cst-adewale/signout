@@ -198,7 +198,7 @@ function renderPaymentInfo() {
                     icon: 'success',
                     title: 'Account copied',
                     showConfirmButton: false,
-                    timer: 1400,
+                    timer: 800,
                     timerProgressBar: true,
                 });
             } catch (_) {
@@ -248,7 +248,7 @@ function addToCart(design) {
         text: `${design.name} has been added to your cart.`,
         icon: 'success',
         confirmButtonColor: '#000000',
-        timer: 1400,
+        timer: 800,
         showConfirmButton: false
     });
 }
@@ -1240,6 +1240,18 @@ function logout() {
     removeToken();
     state.token = null;
     state.user = null;
+
+    // Clear cart and design states on logout
+    state.cart = [];
+    state.designId = null;
+    state.designName = null;
+    state.receipt = null;
+    state.customDesign = null;
+    persistCart();
+    try {
+        sessionStorage.removeItem('sos_selected_design');
+    } catch (_) {}
+
     updateUI();
     Swal.fire('Signed Out', 'You have successfully signed out.', 'success');
 }
