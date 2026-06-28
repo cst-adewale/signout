@@ -854,11 +854,11 @@
 }
 
 .price-row--discount .price-row__label {
-    color: var(--color-danger);
+    color: #16a34a;
 }
 
 .price-row--discount .price-row__value {
-    color: var(--color-danger);
+    color: #16a34a;
 }
 
 .price-divider {
