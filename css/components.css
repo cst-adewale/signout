@@ -768,36 +768,6 @@
     padding: var(--sp-1);
     transition: var(--t-fast);
 }
-
-.file-preview__remove:hover {
-    opacity: .7;
-}
-
-/* Checkbox */
-.checkbox-row {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--sp-3);
-}
-
-.checkbox-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin-top: 2px;
-    flex-shrink: 0;
-    accent-color: var(--color-ink);
-    cursor: pointer;
-}
-
-.checkbox-row label {
-    font-size: .9375rem;
-    color: var(--color-text-sub);
-    cursor: pointer;
-}
-
-/* ==========================================================================
-   Pricing Summary
-   ========================================================================== */
 .price-box {
     background: var(--color-bg-soft);
     border: 1px solid var(--color-border);
