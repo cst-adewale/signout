@@ -391,6 +391,7 @@ body.dark .btn-primary,
 body.dark .nav__cta,
 body.dark .nav__cart-count,
 body.dark .filter-pill,
+body.dark .form-checkbox,
 body.dark .design-tag {
     color: #000000 !important;
 }
@@ -421,4 +422,8 @@ body.dark .file-preview__size {
 
 body.dark .discount-banner {
     color: #000000 !important;
+}
+
+body.dark .checkbox-row input[type="checkbox"]:checked::after {
+    border-color: #000000;
 }

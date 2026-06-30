@@ -57,6 +57,13 @@ const PLAIN_SHIRT_ITEM = {
     type: 'plain',
 };
 
+const UPLOADED_CUSTOMS_ITEM = {
+    id: 'CUSTOM-UPLOADED',
+    name: 'For Uploaded Customs',
+    src: 'assets/plain-shirt.webp',
+    type: 'custom',
+};
+
 const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
     const num = i + 1;
     const id = `D${String(num).padStart(2, '0')}`;
@@ -475,11 +482,11 @@ function initGallery() {
     // Plain White T-Shirt is rendered as the first tile in the gallery grid,
     // followed by the regular design catalog — same card markup, same
     // select/preview/cart behavior for all of them.
-    const galleryItems = [PLAIN_SHIRT_ITEM, ...DESIGN_CATALOG.slice(0, INITIAL_GALLERY_COUNT)];
+    const galleryItems = [PLAIN_SHIRT_ITEM, UPLOADED_CUSTOMS_ITEM, ...DESIGN_CATALOG.slice(0, INITIAL_GALLERY_COUNT - 2)];
 
     if (grid && !grid.dataset.rendered) {
         grid.innerHTML = galleryItems.map(design => `
-            <div class="gallery-card" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}" data-type="${design.type}">
+            <div class="gallery-card ${design.id === 'PLAIN' ? 'gallery-card--plain' : design.id === 'CUSTOM-UPLOADED' ? 'gallery-card--custom-upload' : ''}" data-id="${design.id}" data-name="${design.name}" data-src="${design.src}" data-type="${design.type}">
                 <div class="gallery-card__img-wrap">
                     <img src="${design.src}" alt="${design.id}" loading="lazy" decoding="async">
                     <div class="gallery-card__overlay"><span class="btn btn-secondary btn-sm">Preview</span></div>
