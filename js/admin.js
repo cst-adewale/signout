@@ -177,7 +177,6 @@ function renderUsers(users) {
         return;
     }
 
-    const isVisible = !container.hidden;
     container.innerHTML = users.map(user => {
         const date = new Date(user.createdAt).toLocaleDateString('en-NG', {
             hour: '2-digit',
@@ -197,8 +196,6 @@ function renderUsers(users) {
             </div>
         `;
     }).join('');
-
-    container.hidden = !isVisible ? true : false;
 }
 
 // ─── Render Stats ────────────────────────────────────────────────────────────
@@ -874,7 +871,7 @@ function initUsersPanel() {
     const setExpanded = (expanded) => {
         panel.hidden = !expanded;
         toggleBtn.setAttribute('aria-expanded', String(expanded));
-        toggleBtn.textContent = expanded ? 'Hide Users' : 'Show Users';
+        toggleBtn.textContent = expanded ? 'Hide Users ▲' : 'Show Users ▼';
     };
 
     setExpanded(false);
