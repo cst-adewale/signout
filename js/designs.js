@@ -31,6 +31,18 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const fmt = (n) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(n);
 
+function getCartItemCount() {
+    return state.cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+}
+
+function updateCartBadge() {
+    const badge = $('#nav-cart-count');
+    if (!badge) return;
+    const count = getCartItemCount();
+    badge.textContent = String(count);
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
 // ─── Design Catalog ───────────────────────────────────────────────────────────
 
 const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
@@ -83,6 +95,7 @@ async function fetchProfile() {
 
 function persistCart() {
     try { sessionStorage.setItem('sos_cart', JSON.stringify(state.cart)); } catch (_) {}
+    updateCartBadge();
 }
 
 function restoreCart() {
@@ -95,6 +108,7 @@ function restoreCart() {
     } catch (_) {
         state.cart = [];
     }
+    updateCartBadge();
 }
 
 function addToCart(design) {
@@ -112,6 +126,7 @@ function addToCart(design) {
         });
     }
     persistCart();
+    updateCartBadge();
     syncGalleryState();
     Swal.fire({
         title: 'Added to Cart',
@@ -126,6 +141,7 @@ function addToCart(design) {
 function removeFromCart(id) {
     state.cart = state.cart.filter(x => x.id !== id);
     persistCart();
+    updateCartBadge();
     syncGalleryState();
 }
 

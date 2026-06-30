@@ -26,6 +26,14 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const fmt = (n) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(n);
 
+const escapeHtml = (value = '') =>
+    String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
 // ─── Authentication Gate ─────────────────────────────────────────────────────
 async function checkAuth() {
     if (!state.password) {
@@ -333,6 +341,7 @@ function buildOrderHTML(order) {
                         <div><strong>Type:</strong> ${order.shirtType === 'custom' ? 'Customized' : 'Plain'}</div>
                         <div><strong>Size &amp; Qty:</strong> ${order.size} &times; ${order.qty}</div>
                         ${order.shirtType === 'custom' ? `<div><strong>Back Print:</strong> "${order.customization.name}" (#${order.customization.number || 'None'})</div>` : ''}
+                        ${order.customDesign && order.customDesign.mode === 'text' ? `<div><strong>Custom Design Notes:</strong> ${escapeHtml(order.customDesign.text)}</div>` : ''}
                     </div>
                 </div>
                 
@@ -348,10 +357,10 @@ function buildOrderHTML(order) {
                             📄 View Receipt
                         </button>
                     ` : '<span style="color: var(--color-text-faint); font-size: .85rem;">No Receipt Uploaded</span>'}
-                    ${order.customDesign && order.customDesign.name ? `
+                    ${order.customDesign ? `
                         <div style="margin-top:.75rem;">
                             <button class="btn btn-secondary btn-sm view-custom-design-btn" data-id="${order.id}">
-                                🎨 View Custom Design
+                                ${order.customDesign.mode === 'text' ? '📝 View Custom Design Notes' : '🎨 View Custom Design'}
                             </button>
                         </div>
                     ` : ''}
@@ -561,6 +570,17 @@ const viewCustomDesignHandler = async function () {
     });
 
     const data = order.customDesign;
+    if (data.mode === 'text') {
+        Swal.fire({
+            title: `Custom Design Notes: #${orderId}`,
+            html: `<div style="text-align:left; white-space:pre-wrap; line-height:1.6;">${escapeHtml(data.text || 'No notes provided.')}</div>`,
+            showCloseButton: true,
+            confirmButtonText: 'Close',
+            confirmButtonColor: '#000000'
+        });
+        return;
+    }
+
     const isPdf = (data.type || '').includes('pdf');
     Swal.fire({
         title: `Custom Design: #${orderId}`,

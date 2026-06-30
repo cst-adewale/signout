@@ -79,6 +79,18 @@ function genId() {
     return `${dd}${mm}${yy}-${rnd}`;
 }
 
+function getCartItemCount() {
+    return state.cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+}
+
+function updateCartBadge() {
+    const badge = $('#nav-cart-count');
+    if (!badge) return;
+    const count = getCartItemCount();
+    badge.textContent = String(count);
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
 // Token storage helpers
 function saveToken(token) {
     try {
@@ -242,6 +254,7 @@ function addToCart(design) {
     }
     persistCart();
     renderCart();
+    updateCartBadge();
     syncGallerySelectionState();
     Swal.fire({
         title: 'Added to Cart',
@@ -257,6 +270,7 @@ function removeFromCartById(id) {
     state.cart = state.cart.filter(x => x.id !== id);
     persistCart();
     renderCart();
+    updateCartBadge();
     syncGallerySelectionState();
 }
 
@@ -277,6 +291,7 @@ function persistCart() {
     try {
         sessionStorage.setItem('sos_cart', JSON.stringify(state.cart));
     } catch (_) { }
+    updateCartBadge();
 }
 
 function restoreCart() {
@@ -290,6 +305,7 @@ function restoreCart() {
     } catch (_) {
         state.cart = [];
     }
+    updateCartBadge();
 }
 
 function renderCart() {
@@ -303,6 +319,7 @@ function renderCart() {
         items.style.display = 'none';
         if (selectedId) selectedId.value = '';
         updateCartPriceSummary();
+        updateCartBadge();
         return;
     }
 
@@ -384,6 +401,7 @@ function renderCart() {
 
     if (selectedId && state.cart[0]) selectedId.value = state.cart[0].id;
     updateCartPriceSummary();
+    updateCartBadge();
 }
 
 function updateCartPriceSummary() {
@@ -694,6 +712,7 @@ function compressCustomDesign(dataUrl) {
 
 function initCustomDesignUpload() {
     const input = $('#custom-design-input');
+    const textInput = $('#custom-design-text');
     const preview = $('#custom-design-preview');
     const removeBtn = $('#remove-custom-design');
     const locked = $('#custom-design-locked');
@@ -709,11 +728,43 @@ function initCustomDesignUpload() {
 
     sync();
 
+    const setTextDesign = () => {
+        if (!textInput || !state.user) return;
+        const text = textInput.value.trim();
+        if (!text) {
+            if (!state.customDesign || state.customDesign.mode !== 'image') {
+                state.customDesign = null;
+            }
+            if (preview && (!state.customDesign || state.customDesign.mode !== 'image')) {
+                preview.classList.remove('show');
+            }
+            return;
+        }
+
+        state.customDesign = {
+            mode: 'text',
+            text,
+        };
+
+        if (preview) {
+            $('#custom-design-preview-icon').textContent = '📝';
+            $('#custom-design-preview-name').textContent = 'Text design request';
+            $('#custom-design-preview-size').textContent = text.length > 80 ? `${text.slice(0, 80)}…` : text;
+            preview.classList.add('show');
+        }
+    };
+
     loginBtn?.addEventListener('click', () => $('#form-login-btn')?.click());
+
+    textInput?.addEventListener('input', () => {
+        if (input) input.value = '';
+        setTextDesign();
+    });
 
     input?.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file || !state.user) return;
+        if (textInput) textInput.value = '';
 
         const maxBytes = CONFIG.maxFileSizeMB * 1024 * 1024;
         if (file.size > maxBytes) {
@@ -723,7 +774,7 @@ function initCustomDesignUpload() {
         }
 
         const allowed = ['image/png', 'image/jpeg', 'image/webp'];
-        if (!allowed.includes(file.type)) {
+            if (!allowed.includes(file.type)) {
             Swal.fire('Wrong File Type', 'Please upload a PNG, JPG, or WebP image.', 'error');
             input.value = '';
             return;
@@ -753,6 +804,7 @@ function initCustomDesignUpload() {
     removeBtn?.addEventListener('click', () => {
         state.customDesign = null;
         input.value = '';
+        if (textInput) textInput.value = '';
         preview.classList.remove('show');
     });
 }
@@ -1250,7 +1302,7 @@ function logout() {
     persistCart();
     try {
         sessionStorage.removeItem('sos_selected_design');
-    } catch (_) {}
+    } catch (_) { }
 
     updateUI();
     Swal.fire('Signed Out', 'You have successfully signed out.', 'success');

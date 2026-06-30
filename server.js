@@ -104,7 +104,9 @@ const OrderSchema = new mongoose.Schema({
         name: { type: String, default: '' },
         size: { type: Number },
         type: { type: String },
-        dataUrl: { type: String }
+        dataUrl: { type: String },
+        mode: { type: String, default: 'image' },
+        text: { type: String, default: '' }
     },
     pricing: {
         unit: Number,
@@ -395,6 +397,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 <p><strong>Design:</strong> ${newOrder.design.name} (${newOrder.design.id})</p>
                 <p><strong>Shirt Type:</strong> ${newOrder.shirtType === 'custom' ? 'Customized' : 'Plain'}</p>
                 ${newOrder.shirtType === 'custom' ? `<p><strong>Back Personalization:</strong> Name: ${newOrder.customization.name}, Number: ${newOrder.customization.number}</p>` : ''}
+                ${newOrder.customDesign && newOrder.customDesign.mode === 'text' ? `<p><strong>Custom Design Notes:</strong> ${newOrder.customDesign.text}</p>` : ''}
                 <p><strong>Size:</strong> ${newOrder.size}</p>
                 <p><strong>Quantity:</strong> ${newOrder.qty}</p>
                 <p><strong>Total Paid:</strong> ${fmt(newOrder.pricing.total)} (${newOrder.payment.method === 'bank-transfer' ? 'Bank Transfer' : 'USSD'})</p>
@@ -415,7 +418,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 });
             }
         }
-        if (newOrder.customDesign && newOrder.customDesign.dataUrl && newOrder.customDesign.dataUrl.startsWith('data:')) {
+        if (newOrder.customDesign && newOrder.customDesign.mode !== 'text' && newOrder.customDesign.dataUrl && newOrder.customDesign.dataUrl.startsWith('data:')) {
             const matches = newOrder.customDesign.dataUrl.match(/^data:(.+);base64,(.+)$/);
             if (matches && matches.length === 3) {
                 attachments.push({

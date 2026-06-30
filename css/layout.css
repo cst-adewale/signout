@@ -80,6 +80,32 @@
     color: var(--color-text);
 }
 
+.nav__cart {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.nav__cart-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+.nav__cart-count {
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 .35rem;
+    border-radius: var(--r-full);
+    background: var(--color-ink);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
 .nav__cta {
     background: var(--color-ink);
     color: #fff;

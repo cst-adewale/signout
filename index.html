@@ -33,6 +33,10 @@
                     <a href="#gallery" class="nav__link">Designs</a>
                     <a href="#my-orders" class="nav__link" id="nav-orders-link" style="display: none;">My Orders</a>
                     <a href="#" class="nav__link" id="auth-btn">Sign In</a>
+                    <a href="#order-form" class="nav__link nav__cart" id="nav-cart-link" aria-label="Go to cart">
+                        <span class="nav__cart-icon">🛒</span>
+                        <span class="nav__cart-count" id="nav-cart-count" aria-label="Cart items">0</span>
+                    </a>
                     <a href="#order-form" class="nav__cta">Place Order</a>
                 </div>
             </nav>
@@ -129,7 +133,9 @@
             <div class="container">
                 <div class="section-header">
                     <h2 class="t-lg">Upload Your Own Design</h2>
-                    <p class="text-sub">Signed-in users can upload a custom artwork to send with the order and receipt.
+                    <p class="text-sub">Signed-in users can upload a custom artwork or type a written design idea if
+                        they
+                        do not want to send a picture.
                     </p>
                 </div>
                 <div class="form-block">
@@ -153,6 +159,14 @@
                                     <span class="file-upload__title">Click to upload your design</span>
                                     <span class="file-upload__sub">PNG, JPG or WebP — Max 5MB</span>
                                 </label>
+                                <div class="form-group" style="margin-top:1rem;">
+                                    <label for="custom-design-text" class="form-label">Or type your custom design
+                                        description</label>
+                                    <textarea id="custom-design-text" class="form-control" rows="4"
+                                        placeholder="Example: White shirt with a bold red back print that says 'Class of 2026' and a small logo on the chest."></textarea>
+                                    <p class="text-sub" style="margin-top:.5rem;">Use this if you want to send your idea
+                                        as text instead of uploading a picture.</p>
+                                </div>
                                 <div class="file-preview" id="custom-design-preview">
                                     <div class="file-preview__icon" id="custom-design-preview-icon">🖼️</div>
                                     <div>
