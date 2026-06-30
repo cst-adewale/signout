@@ -1049,6 +1049,14 @@ function renderMyOrders() {
     grid.innerHTML = [...state.orders].reverse().map(order => {
         const date = new Date(order.createdAt).toLocaleDateString('en-NG');
         const status = order.status;
+        const statusLabel = {
+            pending: 'Pending',
+            confirmed: 'Confirmed',
+            delivery: 'On Delivery',
+            delivered: 'Delivered',
+            rejected: 'Rejected',
+        }[status] || status;
+        const totalQty = Number(order.pricing?.totalQty) || Number(order.qty) || (Array.isArray(order.cartItems) ? order.cartItems.reduce((sum, item) => sum + (Number(item.qty) || 1), 0) : 1);
         return `
             <div class="order-card">
                 <div class="order-card__head">
@@ -1056,20 +1064,20 @@ function renderMyOrders() {
                         <div class="order-card__id">#${order.id}</div>
                         <div class="order-card__date">${date}</div>
                     </div>
-                    <span class="badge badge--${status}">${status}</span>
+                    <span class="badge badge--${status}">${statusLabel}</span>
                 </div>
                 <div class="order-card__body">
                     <div class="order-card__row">
                         <span>Design</span>
-                        <span>${order.design.name} (${order.design.id})</span>
+                        <span>${order.design?.name || 'Unknown'} (${order.design?.id || 'N/A'})</span>
                     </div>
                     <div class="order-card__row">
                         <span>Type</span>
-                        <span>${order.shirtType === 'custom' ? 'Customized' : 'Plain'}</span>
+                        <span>${getOrderTypeLabel(order)}</span>
                     </div>
                     <div class="order-card__row">
                         <span>Total Shirts</span>
-                        <span>${order.pricing.totalQty}</span>
+                        <span>${totalQty}</span>
                     </div>
                     <div class="order-card__row">
                         <span>Payment</span>
@@ -1078,10 +1086,99 @@ function renderMyOrders() {
                 </div>
                 <div class="order-card__foot">
                     <span class="order-card__total">${fmt(order.pricing.total)}</span>
+                    <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.75rem;">
+                        <button type="button" class="btn btn-secondary btn-sm my-order-details-btn" data-id="${order.id}">View Details</button>
+                        <button type="button" class="btn btn-secondary btn-sm my-order-designs-btn" data-id="${order.id}">Designs Selected</button>
+                    </div>
                 </div>
             </div>
         `;
     }).join('');
+
+    attachMyOrderButtons();
+}
+
+function getOrderTypeLabel(order) {
+    if ((order?.cartItems || []).some(item => (item?.id || '') === 'PLAIN' || (item?.type || '') === 'plain')) return 'Plain';
+    if ((order?.cartItems || []).some(item => (item?.id || '') === 'CUSTOM-UPLOADED')) return 'Uploaded Custom';
+    return order?.shirtType === 'custom' ? 'Customized' : 'Plain';
+}
+
+function attachMyOrderButtons() {
+    $$('.my-order-details-btn').forEach(btn => {
+        btn.onclick = () => openMyOrderDetails(btn.dataset.id);
+    });
+    $$('.my-order-designs-btn').forEach(btn => {
+        btn.onclick = () => openMyOrderDesigns(btn.dataset.id);
+    });
+}
+
+function openMyOrderDetails(orderId) {
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) return;
+    const items = Array.isArray(order.cartItems) && order.cartItems.length ? order.cartItems : [{
+        name: order.design?.name || 'Unknown Item',
+        id: order.design?.id || 'N/A',
+        qty: order.qty || 1,
+        size: order.size || 'M',
+        type: order.shirtType || 'plain'
+    }];
+
+    const rows = items.map((item, index) => `
+        <div style="border:1px solid var(--color-border); border-radius:12px; padding:1rem; background:var(--color-bg-soft); text-align:left;">
+            <strong>Shirt ${index + 1}: ${item.name || item.id || 'Unknown'}</strong>
+            <div style="margin-top:.4rem; display:grid; gap:.25rem; font-size:.9rem;">
+                <div><strong>Type:</strong> ${item.id === 'PLAIN' || item.type === 'plain' ? 'Plain' : item.id === 'CUSTOM-UPLOADED' ? 'Uploaded Custom' : 'Customized'}</div>
+                <div><strong>Size:</strong> ${item.size || order.size || 'M'}</div>
+                <div><strong>Quantity:</strong> ${item.qty || 1}</div>
+            </div>
+        </div>
+    `).join('');
+
+    Swal.fire({
+        title: `Order Details: #${orderId}`,
+        html: `<div style="display:grid; gap:1rem;">${rows}</div>`,
+        width: 760,
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#000000',
+        showCloseButton: true
+    });
+}
+
+function openMyOrderDesigns(orderId) {
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) return;
+    const items = Array.isArray(order.cartItems) && order.cartItems.length ? order.cartItems : [{
+        name: order.design?.name || 'Unknown Design',
+        id: order.design?.id || 'N/A',
+        src: order.design?.src || '',
+        qty: order.qty || 1,
+        size: order.size || 'M',
+        type: order.shirtType || 'plain'
+    }];
+
+    const cards = items.map(item => `
+        <div style="border:1px solid var(--color-border); border-radius:12px; overflow:hidden; background:var(--color-bg-soft); text-align:left;">
+            <div style="aspect-ratio:1; background:#fff;">
+                ${item.src ? `<img src="${item.src}" alt="${item.name || item.id || 'Design'}" style="width:100%; height:100%; object-fit:cover;">` : '<div style="padding:2rem; color:var(--color-text-faint);">No image</div>'}
+            </div>
+            <div style="padding:1rem; display:grid; gap:.25rem; font-size:.9rem;">
+                <strong>${item.name || item.id || 'Design'}</strong>
+                <span>Type: ${item.id === 'PLAIN' || item.type === 'plain' ? 'Plain' : item.id === 'CUSTOM-UPLOADED' ? 'Uploaded Custom' : 'Customized'}</span>
+                <span>Size: ${item.size || order.size || 'M'}</span>
+                <span>Qty: ${item.qty || 1}</span>
+            </div>
+        </div>
+    `).join('');
+
+    Swal.fire({
+        title: `Designs Selected: #${orderId}`,
+        html: `<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem;">${cards}</div>`,
+        width: 900,
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#000000',
+        showCloseButton: true
+    });
 }
 
 // ─── Authentication Interface ──────────────────────────────────────────────────
