@@ -1,40 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Designs | Signoutshirts</title>
+    <meta name="description" content="Browse all 47 available sign-out shirt designs. Add any design directly to your cart.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
 </head>
+
 <body>
+
+    <!-- Header -->
     <header class="site-header">
         <div class="site-header__inner">
             <a href="index.html" class="logo">SIGNOUTSHIRTS.</a>
             <nav class="nav">
-                <div class="nav__links" style="display:flex;gap:1rem;align-items:center;">
-                    <a href="index.html" class="nav__link">Back to Order</a>
+                <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="nav__links" id="nav-links">
+                    <button id="theme-toggle" class="nav__link"
+                        style="background:none; border:none; cursor:pointer; font-size:1.1rem; display:inline-flex; align-items:center; padding:0; outline:none;"
+                        aria-label="Toggle Theme">🌙</button>
+                    <a href="index.html#gallery" class="nav__link">Back to Gallery</a>
+                    <a href="index.html#order-form" class="nav__link">Place Order</a>
+                    <a href="#" class="nav__link" id="auth-btn">Sign In</a>
+                    <a href="index.html#order-form" class="nav__cta">Go to Cart</a>
                 </div>
             </nav>
         </div>
     </header>
 
     <main>
-        <section class="section gallery">
+        <!-- Designs Gallery -->
+        <section id="gallery" class="section gallery">
             <div class="container">
                 <div class="section-header">
-                    <h1 class="t-lg">All 47 Designs</h1>
-                    <p class="text-sub">Pick a design here and you’ll be sent back to the main page with it selected.</p>
+                    <h1 class="t-lg">All Designs</h1>
+                    <p class="text-sub">Click any tile to preview it, or hit "Select Design" to add it to your cart.
+                        Your cart is shared with the main page — designs you pick here will be waiting for you there.</p>
                 </div>
+
+                <!-- Auth notice for logged-out users -->
+                <div id="designs-auth-notice" style="display:none; margin-bottom:1.5rem;">
+                    <div class="info-banner" style="justify-content:center; gap:.75rem;">
+                        <span>🔒</span>
+                        <p>
+                            <a href="#" id="designs-signin-link" style="font-weight:600; text-decoration:underline;">Sign in</a>
+                            to add designs to your cart and place an order.
+                        </p>
+                    </div>
+                </div>
+
                 <div class="gallery-grid" id="full-gallery-grid"></div>
             </div>
         </section>
     </main>
 
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="site-footer__grid">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">SIGNOUTSHIRTS.</a>
+                <p class="footer-tagline">Simplifying sign-out shirt ordering for 400-Level students.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Get In Touch</h4>
+                <a href="https://wa.me/+2348057586599" target="_blank">WhatsApp</a>
+                <a href="mailto:pappymedia01@gmail.com" target="_blank">Email</a>
+            </div>
+        </div>
+        <div class="site-footer__bottom">
+            <p>&copy; 2026 Signoutshirts. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Design Preview Modal -->
+    <div id="gallery-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal" role="dialog">
+            <button class="modal__close" id="modal-close" aria-label="Close">&times;</button>
+            <div class="modal__body">
+                <div class="modal__img-col">
+                    <img id="modal-img" src="" alt="">
+                </div>
+                <div class="modal__info-col">
+                    <span id="modal-tag" class="design-tag">D01</span>
+                    <h3 id="modal-name" class="t-md" style="margin-top: .5rem;">Design Name</h3>
+                    <p class="modal__desc">Premium screen-printed front graphic. Pairs perfectly with name &amp;
+                        number back print if you choose the customized option.</p>
+                    <button id="modal-select" class="btn btn-primary w-full">Select This Design</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Sign In / Register) -->
+    <div id="auth-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal" role="dialog" style="max-width: 480px;">
+            <button class="modal__close" id="auth-modal-close" aria-label="Close">&times;</button>
+            <div class="modal__body" style="display: block; padding: 2.5rem;">
+
+                <!-- Login Form -->
+                <div id="login-form-container">
+                    <h3 class="t-md" style="margin-bottom: 0.5rem; text-align: center;">Welcome Back</h3>
+                    <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Sign in to add designs to
+                        your cart.</p>
+                    <form id="login-form" novalidate>
+                        <div class="form-group" style="margin-bottom: 1.2rem;">
+                            <label class="form-label" for="login-email">Email Address <span
+                                    class="req">*</span></label>
+                            <input type="email" id="login-email" class="form-input" placeholder="you@email.com"
+                                required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label" for="login-password">Password <span
+                                    class="req">*</span></label>
+                            <input type="password" id="login-password" class="form-input" placeholder="••••••••"
+                                required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full" id="login-submit-btn">Sign In</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                        New to Signoutshirts? <a href="#" id="switch-to-signup" class="form-link">Create an
+                            account</a>
+                    </p>
+                </div>
+
+                <!-- Signup Form -->
+                <div id="signup-form-container" style="display: none;">
+                    <h3 class="t-md" style="margin-bottom: 0.5rem; text-align: center;">Create Account</h3>
+                    <p class="text-sub" style="text-align: center; margin-bottom: 1.5rem;">Register to place and
+                        track your orders.</p>
+                    <form id="signup-form" novalidate>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label" for="signup-name">Full Name <span class="req">*</span></label>
+                            <input type="text" id="signup-name" class="form-input" placeholder="Your full name"
+                                required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label" for="signup-email">Email Address <span
+                                    class="req">*</span></label>
+                            <input type="email" id="signup-email" class="form-input" placeholder="you@email.com"
+                                required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label" for="signup-whatsapp">WhatsApp Number <span
+                                    class="req">*</span></label>
+                            <input type="tel" id="signup-whatsapp" class="form-input" placeholder="+234..."
+                                required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label" for="signup-location">Delivery Location <span
+                                    class="req">*</span></label>
+                            <input type="text" id="signup-location" class="form-input"
+                                placeholder="e.g., Yaba, Lagos" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label" for="signup-password">Password <span
+                                    class="req">*</span></label>
+                            <input type="password" id="signup-password" class="form-input"
+                                placeholder="Min 6 characters" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full" id="signup-submit-btn">Create
+                            Account</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                        Already have an account? <a href="#" id="switch-to-login" class="form-link">Sign In</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="js/designs.js"></script>
 </body>
+
 </html>
