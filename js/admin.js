@@ -341,14 +341,12 @@ function buildOrderHTML(order) {
                 <div>
                     <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Shirt Details</h4>
                     <div style="font-size: .9rem; line-height: 1.5;">
-                        <div><strong>Design:</strong> ${order.design.name} (${order.design.id})</div>
-                        <div><strong>Type:</strong> ${getOrderTypeLabel(order)}</div>
-                        <div><strong>Size &amp; Qty:</strong> ${order.size} &times; ${order.qty}</div>
-                        <div><strong>Shirt Breakdown:</strong> ${Array.isArray(order.cartItems) && order.cartItems.length ? `${order.cartItems.length} item(s)` : '1 item'}</div>
-                        ${order.shirtType === 'custom' ? `<div><strong>Back Print:</strong> "${order.customization.name}" (#${order.customization.number || 'None'})</div>` : ''}
-                        <div style="margin-top:.5rem;">
+                        <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.25rem;">
                             <button class="btn btn-secondary btn-sm view-shirt-details-btn" data-id="${order.id}">
                                 👕 View Shirt Details
+                            </button>
+                            <button class="btn btn-secondary btn-sm view-designs-btn" data-id="${order.id}">
+                                🖼️ Designs Selected
                             </button>
                         </div>
                     </div>
@@ -518,6 +516,11 @@ function attachOrderEventListeners(container) {
         btn.addEventListener('click', viewShirtDetailsHandler);
     });
 
+    container.querySelectorAll('.view-designs-btn').forEach(btn => {
+        btn.removeEventListener('click', viewDesignsHandler);
+        btn.addEventListener('click', viewDesignsHandler);
+    });
+
     // Confirm, Reject, Delivery, Delivered
     container.querySelectorAll('.confirm-order-btn').forEach(btn => {
         btn.removeEventListener('click', confirmOrderHandler);
@@ -680,6 +683,48 @@ const viewShirtDetailsHandler = function () {
         confirmButtonText: 'Close',
         confirmButtonColor: '#000000',
         width: 700
+    });
+};
+
+const viewDesignsHandler = function () {
+    const orderId = this.dataset.id;
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const items = Array.isArray(order.cartItems) && order.cartItems.length ? order.cartItems : [{
+        id: order.design?.id || 'UNKNOWN',
+        name: order.design?.name || 'Unknown Design',
+        src: order.design?.src || '',
+        qty: order.qty || 1,
+        size: order.size || 'M',
+        type: order.shirtType || 'plain'
+    }];
+
+    const cards = items.map(item => `
+        <div style="border:1px solid var(--color-border); border-radius: var(--r-md); overflow:hidden; background:var(--color-bg-soft);">
+            <div style="aspect-ratio:1; background:#fff; display:flex; align-items:center; justify-content:center;">
+                ${item.src ? `<img src="${item.src}" alt="${escapeHtml(item.name || item.id || 'Design')}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="color:var(--color-text-faint); padding:2rem;">No image</div>`}
+            </div>
+            <div style="padding: var(--sp-3); display:grid; gap:.25rem; font-size:.9rem;">
+                <strong>${escapeHtml(item.name || item.id || 'Design')}</strong>
+                <span>Type: ${getCartItemTypeLabel(item, order)}</span>
+                <span>Size: ${escapeHtml(item.size || order.size || 'M')}</span>
+                <span>Qty: ${escapeHtml(String(item.qty || 1))}</span>
+            </div>
+        </div>
+    `).join('');
+
+    Swal.fire({
+        title: `Designs Selected: #${orderId}`,
+        html: `
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; text-align:left;">
+                ${cards}
+            </div>
+        `,
+        showCloseButton: true,
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#000000',
+        width: 900
     });
 };
 
