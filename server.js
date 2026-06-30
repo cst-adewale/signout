@@ -434,6 +434,39 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 
         sendMailSafe(mailOptions);
 
+        // Send order confirmation email to the customer as well
+        const customerMailOptions = {
+            from: `"Signoutshirts System" <${process.env.SMTP_USER || 'system@signoutshirts.com'}>`,
+            to: newOrder.customer.email,
+            subject: `✅ Order Received — Signoutshirts #${newOrder.id}`,
+            text: `Hi ${newOrder.customer.name},\n\nWe have received your sign-out shirt order #${newOrder.id}.\n\nOrder Details:\n` +
+                `- Design: ${newOrder.design.name} (${newOrder.design.id})\n` +
+                `- Size: ${newOrder.size}\n` +
+                `- Quantity: ${newOrder.qty}\n` +
+                `- Shirt Type: ${newOrder.shirtType === 'custom' ? 'Customized' : 'Plain'}\n` +
+                `- Total Amount: ${fmt(newOrder.pricing.total)}\n\n` +
+                `Please keep an eye on your email and the admin dashboard for updates on payment verification and order progress.\n\nThank you for choosing Signoutshirts!`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px;">
+                    <h2 style="color: #000; text-align: center;">Order Received ✅</h2>
+                    <p>Hi <strong>${newOrder.customer.name}</strong>,</p>
+                    <p>We’ve received your sign-out shirt order <strong>#${newOrder.id}</strong>.</p>
+                    <div style="background-color: #f7fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h4 style="margin-top: 0;">Order Summary:</h4>
+                        <p style="margin: 5px 0;"><strong>Design:</strong> ${newOrder.design.name} (${newOrder.design.id})</p>
+                        <p style="margin: 5px 0;"><strong>Shirt Type:</strong> ${newOrder.shirtType === 'custom' ? 'Customized' : 'Plain'}</p>
+                        <p style="margin: 5px 0;"><strong>Size:</strong> ${newOrder.size}</p>
+                        <p style="margin: 5px 0;"><strong>Quantity:</strong> ${newOrder.qty}</p>
+                        <p style="margin: 5px 0;"><strong>Total Amount:</strong> ${fmt(newOrder.pricing.total)}</p>
+                    </div>
+                    <p>We’ll update you once your payment has been reviewed.</p>
+                    <p style="margin-top: 30px; font-size: 0.9em; color: #718096; text-align: center;">&copy; 2026 Signoutshirts. All rights reserved.</p>
+                </div>
+            `
+        };
+
+        sendMailSafe(customerMailOptions);
+
     } catch (err) {
         console.error('Error creating order:', err);
         res.status(500).json({ success: false, message: 'Server error. Could not place order.' });
