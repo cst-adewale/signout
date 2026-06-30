@@ -344,8 +344,13 @@ function buildOrderHTML(order) {
                         <div><strong>Design:</strong> ${order.design.name} (${order.design.id})</div>
                         <div><strong>Type:</strong> ${getOrderTypeLabel(order)}</div>
                         <div><strong>Size &amp; Qty:</strong> ${order.size} &times; ${order.qty}</div>
+                        <div><strong>Shirt Breakdown:</strong> ${Array.isArray(order.cartItems) && order.cartItems.length ? `${order.cartItems.length} item(s)` : '1 item'}</div>
                         ${order.shirtType === 'custom' ? `<div><strong>Back Print:</strong> "${order.customization.name}" (#${order.customization.number || 'None'})</div>` : ''}
-                        ${order.customDesign && order.customDesign.mode === 'text' ? `<div><strong>Custom Design Notes:</strong> ${escapeHtml(order.customDesign.text)}</div>` : ''}
+                        <div style="margin-top:.5rem;">
+                            <button class="btn btn-secondary btn-sm view-shirt-details-btn" data-id="${order.id}">
+                                👕 View Shirt Details
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -508,6 +513,11 @@ function attachOrderEventListeners(container) {
         btn.addEventListener('click', viewCustomDesignHandler);
     });
 
+    container.querySelectorAll('.view-shirt-details-btn').forEach(btn => {
+        btn.removeEventListener('click', viewShirtDetailsHandler);
+        btn.addEventListener('click', viewShirtDetailsHandler);
+    });
+
     // Confirm, Reject, Delivery, Delivered
     container.querySelectorAll('.confirm-order-btn').forEach(btn => {
         btn.removeEventListener('click', confirmOrderHandler);
@@ -626,6 +636,55 @@ const viewCustomDesignHandler = async function () {
             link.download = data.name || `custom_design_${orderId}`;
             link.click();
         }
+    });
+};
+
+const viewShirtDetailsHandler = function () {
+    const orderId = this.dataset.id;
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const items = Array.isArray(order.cartItems) && order.cartItems.length ? order.cartItems : [{
+        id: order.design?.id || 'UNKNOWN',
+        name: order.design?.name || 'Unknown Item',
+        src: '',
+        qty: order.qty || 1,
+        size: order.size || 'M',
+        type: order.shirtType || 'plain'
+    }];
+
+    const itemRows = items.map((item, index) => `
+        <div style="border:1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-4); background: var(--color-bg-soft);">
+            <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:.5rem;">
+                <strong>Shirt ${index + 1}: ${escapeHtml(item.name || 'Unnamed Shirt')}</strong>
+                <span class="badge badge--${(item.type || 'custom') === 'plain' ? 'pending' : 'confirmed'}">${getCartItemTypeLabel(item, order)}</span>
+            </div>
+            <div style="display:grid; gap:.35rem; font-size:.9rem; line-height:1.5;">
+                <div><strong>Design:</strong> ${escapeHtml(item.id || '')}</div>
+                <div><strong>Size:</strong> ${escapeHtml(item.size || order.size || 'M')}</div>
+                <div><strong>Quantity:</strong> ${escapeHtml(String(item.qty || 1))}</div>
+            </div>
+        </div>
+    `).join('');
+
+    Swal.fire({
+        title: `Shirt Details: #${orderId}`,
+        html: `
+            <div style="text-align:left; display:grid; gap:1rem;">
+                <div style="font-size:.95rem;">
+                    <div><strong>Overall Type:</strong> ${getOrderTypeLabel(order)}</div>
+                    <div><strong>Order Size:</strong> ${escapeHtml(order.size || 'M')}</div>
+                    <div><strong>Order Quantity:</strong> ${escapeHtml(String(order.qty || 1))}</div>
+                </div>
+                <div style="display:grid; gap:.75rem;">
+                    ${itemRows}
+                </div>
+            </div>
+        `,
+        showCloseButton: true,
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#000000',
+        width: 700
     });
 };
 
@@ -959,6 +1018,12 @@ function initTheme() {
 function getOrderTypeLabel(order) {
     if (order.shirtType !== 'custom') return 'Plain';
     return order.customDesign ? 'Uploaded Custom' : 'Customized';
+}
+
+function getCartItemTypeLabel(item, order) {
+    if ((item?.id || '') === 'PLAIN' || (item?.type || '') === 'plain') return 'Plain';
+    if (order?.customDesign && order?.shirtType === 'custom') return 'Uploaded Custom';
+    return 'Customized';
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
