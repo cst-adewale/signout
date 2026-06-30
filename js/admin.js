@@ -657,10 +657,10 @@ const viewShirtDetailsHandler = function () {
         <div style="border:1px solid var(--color-border); border-radius: var(--r-md); padding: var(--sp-4); background: var(--color-bg-soft);">
             <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:.5rem;">
                 <strong>Shirt ${index + 1}: ${escapeHtml(item.name || 'Unnamed Shirt')}</strong>
-                <span class="badge badge--${(item.type || 'custom') === 'plain' ? 'pending' : 'confirmed'}">${getCartItemTypeLabel(item, order)}</span>
+                <span class="badge badge--${getCartItemTypeLabel(item, order) === 'Plain' ? 'pending' : 'confirmed'}">${getCartItemTypeLabel(item, order)}</span>
             </div>
             <div style="display:grid; gap:.35rem; font-size:.9rem; line-height:1.5;">
-                <div><strong>Design:</strong> ${escapeHtml(item.id || '')}</div>
+                <div><strong>Design:</strong> ${escapeHtml(item.name || item.id || '')}</div>
                 <div><strong>Size:</strong> ${escapeHtml(item.size || order.size || 'M')}</div>
                 <div><strong>Quantity:</strong> ${escapeHtml(String(item.qty || 1))}</div>
             </div>
@@ -671,11 +671,6 @@ const viewShirtDetailsHandler = function () {
         title: `Shirt Details: #${orderId}`,
         html: `
             <div style="text-align:left; display:grid; gap:1rem;">
-                <div style="font-size:.95rem;">
-                    <div><strong>Overall Type:</strong> ${getOrderTypeLabel(order)}</div>
-                    <div><strong>Order Size:</strong> ${escapeHtml(order.size || 'M')}</div>
-                    <div><strong>Order Quantity:</strong> ${escapeHtml(String(order.qty || 1))}</div>
-                </div>
                 <div style="display:grid; gap:.75rem;">
                     ${itemRows}
                 </div>
@@ -1022,7 +1017,7 @@ function getOrderTypeLabel(order) {
 
 function getCartItemTypeLabel(item, order) {
     if ((item?.id || '') === 'PLAIN' || (item?.type || '') === 'plain') return 'Plain';
-    if (order?.customDesign && order?.shirtType === 'custom') return 'Uploaded Custom';
+    if ((item?.id || '') === 'CUSTOM-UPLOADED') return 'Uploaded Custom';
     return 'Customized';
 }
 
