@@ -463,6 +463,30 @@ app.delete('/api/orders', async (req, res) => {
 
 // ─── Admin Endpoints ───
 
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        const password = req.headers['x-admin-password'];
+        const expected = process.env.ADMIN_PASSWORD || 'admin123';
+        if (password !== expected) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const result = await Order.deleteOne({ id: req.params.id });
+        if (!result.deletedCount) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Order deleted successfully',
+            deletedCount: result.deletedCount
+        });
+    } catch (err) {
+        console.error('Error deleting order:', err);
+        res.status(500).json({ success: false, message: 'Server error. Failed to delete order.' });
+    }
+});
+
 // 2. Admin Login Verification
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;

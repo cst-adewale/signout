@@ -380,6 +380,9 @@ function buildOrderHTML(order) {
                     <button class="btn btn-primary btn-sm confirm-order-btn" data-id="${order.id}">
                         ✓ Confirm Order
                     </button>
+                    <button class="btn btn-danger btn-sm delete-order-btn" data-id="${order.id}">
+                        🗑 Delete
+                    </button>
                 </div>
             ` : ''}
 
@@ -388,6 +391,9 @@ function buildOrderHTML(order) {
                     <button class="btn btn-primary btn-sm delivery-order-btn" data-id="${order.id}" style="background: #1d4ed8;">
                         🚚 Sent for Delivery
                     </button>
+                    <button class="btn btn-danger btn-sm delete-order-btn" data-id="${order.id}">
+                        🗑 Delete
+                    </button>
                 </div>
             ` : ''}
 
@@ -395,6 +401,17 @@ function buildOrderHTML(order) {
                 <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
                     <button class="btn btn-success btn-sm delivered-order-btn" data-id="${order.id}">
                         ✅ Mark as Delivered
+                    </button>
+                    <button class="btn btn-danger btn-sm delete-order-btn" data-id="${order.id}">
+                        🗑 Delete
+                    </button>
+                </div>
+            ` : ''}
+            
+            ${(!isPending && !isConfirmed && !isDelivery) ? `
+                <div style="display: flex; gap: var(--sp-2); justify-content: flex-end; border-top: 1px solid var(--color-border); padding-top: var(--sp-3); margin-top: var(--sp-2);">
+                    <button class="btn btn-danger btn-sm delete-order-btn" data-id="${order.id}">
+                        🗑 Delete
                     </button>
                 </div>
             ` : ''}
@@ -511,6 +528,11 @@ function attachOrderEventListeners(container) {
         btn.removeEventListener('click', markDeliveredHandler);
         btn.addEventListener('click', markDeliveredHandler);
     });
+
+    container.querySelectorAll('.delete-order-btn').forEach(btn => {
+        btn.removeEventListener('click', deleteOrderHandler);
+        btn.addEventListener('click', deleteOrderHandler);
+    });
 }
 
 // Event Handlers (Extracted for cleaner delegation)
@@ -621,6 +643,10 @@ const markDeliveryHandler = function (e) {
 
 const markDeliveredHandler = function (e) {
     markDelivered(this.dataset.id);
+};
+
+const deleteOrderHandler = function (e) {
+    deleteOrder(this.dataset.id);
 };
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -734,6 +760,35 @@ async function markDelivered(id) {
             loadData(true); // Force refresh
         } else {
             Swal.fire('Error', data.message || 'Action failed.', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', 'Server connection error.', 'error');
+    }
+}
+
+async function deleteOrder(id) {
+    const result = await Swal.fire({
+        title: 'Delete Order?',
+        text: `This will permanently remove order #${id}. This cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Yes, Delete It'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await fetch(`/api/orders/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-password': state.password }
+        });
+        const data = await res.json();
+        if (data.success) {
+            Swal.fire('Deleted', `Order #${id} was deleted.`, 'success');
+            loadData(true);
+        } else {
+            Swal.fire('Error', data.message || 'Delete failed.', 'error');
         }
     } catch (err) {
         Swal.fire('Error', 'Server connection error.', 'error');
@@ -865,7 +920,7 @@ function updateBrandAssets() {
 
 function initUsersPanel() {
     const toggleBtn = $('#users-toggle-btn');
-    const panel = $('#admin-users-list');
+    const panel = $('#admin-users-body');
     if (!toggleBtn || !panel) return;
 
     const setExpanded = (expanded) => {
