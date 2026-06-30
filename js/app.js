@@ -98,6 +98,17 @@ function updateCartBadge() {
     badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
+function updateBrandAssets() {
+    const isDark = document.body.classList.contains('dark');
+    const logo = $('#site-logo');
+    const footerLogo = $('#footer-logo');
+    const favicon = $('#site-favicon');
+    const asset = isDark ? 'assets/pappy_dark.svg' : 'assets/pappy_light.svg';
+    if (logo) logo.src = asset;
+    if (footerLogo) footerLogo.src = asset;
+    if (favicon) favicon.href = asset;
+}
+
 // Token storage helpers
 function saveToken(token) {
     try {
@@ -186,6 +197,12 @@ function calcCartTotals() {
     const finalTotal = totalPrice - discount;
 
     return { totalQty, totalPrice, discount, finalTotal, hasBulkDiscount };
+}
+
+function getOrderShirtType() {
+    const hasCustomItem = state.cart.some(item => (item.type || 'custom') === 'custom');
+    if (hasCustomItem || state.customDesign) return 'custom';
+    return 'plain';
 }
 
 // ─── Payment Info Box ─────────────────────────────────────────────────────────
@@ -877,7 +894,7 @@ async function handleSubmit(e) {
     const order = {
         id: genId(),
         createdAt: new Date().toISOString(),
-        shirtType: state.shirtType,
+        shirtType: getOrderShirtType(),
         design: { id: state.cart[0].id, name: state.cart[0].name },
         cartItems: state.cart,
         customization: {
@@ -1352,11 +1369,13 @@ function initTheme() {
         document.body.classList.remove('dark');
         toggleBtn.textContent = '🌙';
     }
+    updateBrandAssets();
 
     toggleBtn.addEventListener('click', () => {
         const isDark = document.body.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         toggleBtn.textContent = isDark ? '☀️' : '🌙';
+        updateBrandAssets();
     });
 }
 

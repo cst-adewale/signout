@@ -121,17 +121,15 @@ async function loadData(forceRefresh = false) {
 
         const headers = { 'x-admin-password': state.password };
 
-        // Fetch analytics, orders, and users in parallel for maximum speed
-        const [resAnalytics, resOrders, resUsers] = await Promise.all([
+        // Fetch the heavy dashboard pieces first so the page becomes usable sooner.
+        const [resAnalytics, resOrders] = await Promise.all([
             fetch('/api/analytics', { headers }),
-            fetch('/api/orders', { headers }),
-            fetch('/api/users', { headers })
+            fetch('/api/orders', { headers })
         ]);
 
-        const [dataAnalytics, dataOrders, dataUsers] = await Promise.all([
+        const [dataAnalytics, dataOrders] = await Promise.all([
             resAnalytics.json(),
-            resOrders.json(),
-            resUsers.json()
+            resOrders.json()
         ]);
 
         if (dataAnalytics.success) {
@@ -146,11 +144,17 @@ async function loadData(forceRefresh = false) {
             renderOrders();
         }
 
-        if (dataUsers.success) {
-            renderUsers(dataUsers.users);
-        }
-
         state.lastLoadTime = now;
+
+        // Load users in the background so they do not block the main dashboard render.
+        fetch('/api/users', { headers })
+            .then(res => res.json())
+            .then(dataUsers => {
+                if (dataUsers.success) {
+                    renderUsers(dataUsers.users);
+                }
+            })
+            .catch(err => console.error('Error loading admin users:', err));
 
     } catch (err) {
         console.error('Error loading admin dashboard data:', err);
@@ -173,6 +177,7 @@ function renderUsers(users) {
         return;
     }
 
+    const isVisible = !container.hidden;
     container.innerHTML = users.map(user => {
         const date = new Date(user.createdAt).toLocaleDateString('en-NG', {
             hour: '2-digit',
@@ -192,6 +197,8 @@ function renderUsers(users) {
             </div>
         `;
     }).join('');
+
+    container.hidden = !isVisible ? true : false;
 }
 
 // ─── Render Stats ────────────────────────────────────────────────────────────
@@ -338,7 +345,7 @@ function buildOrderHTML(order) {
                     <h4 style="font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); margin-bottom: var(--sp-2);">Shirt Details</h4>
                     <div style="font-size: .9rem; line-height: 1.5;">
                         <div><strong>Design:</strong> ${order.design.name} (${order.design.id})</div>
-                        <div><strong>Type:</strong> ${order.shirtType === 'custom' ? 'Customized' : 'Plain'}</div>
+                        <div><strong>Type:</strong> ${getOrderTypeLabel(order)}</div>
                         <div><strong>Size &amp; Qty:</strong> ${order.size} &times; ${order.qty}</div>
                         ${order.shirtType === 'custom' ? `<div><strong>Back Print:</strong> "${order.customization.name}" (#${order.customization.number || 'None'})</div>` : ''}
                         ${order.customDesign && order.customDesign.mode === 'text' ? `<div><strong>Custom Design Notes:</strong> ${escapeHtml(order.customDesign.text)}</div>` : ''}
@@ -850,13 +857,62 @@ function initAdminNav() {
     });
 }
 
+function updateBrandAssets() {
+    const isDark = document.body.classList.contains('dark');
+    const logo = $('#site-logo');
+    const favicon = $('#site-favicon');
+    const asset = isDark ? 'assets/pappy_dark.svg' : 'assets/pappy_light.svg';
+    if (logo) logo.src = asset;
+    if (favicon) favicon.href = asset;
+}
+
+function initUsersPanel() {
+    const toggleBtn = $('#users-toggle-btn');
+    const panel = $('#admin-users-list');
+    if (!toggleBtn || !panel) return;
+
+    const setExpanded = (expanded) => {
+        panel.hidden = !expanded;
+        toggleBtn.setAttribute('aria-expanded', String(expanded));
+        toggleBtn.textContent = expanded ? 'Hide Users' : 'Show Users';
+    };
+
+    setExpanded(false);
+    toggleBtn.addEventListener('click', () => {
+        const expanded = toggleBtn.getAttribute('aria-expanded') !== 'true';
+        setExpanded(expanded);
+    });
+}
+
+function initTheme() {
+    const toggleBtn = $('#admin-theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+
+    document.body.classList.toggle('dark', isDark);
+    if (toggleBtn) {
+        toggleBtn.textContent = isDark ? '☀️' : '🌙';
+        toggleBtn.addEventListener('click', () => {
+            const nextIsDark = document.body.classList.toggle('dark');
+            localStorage.setItem('theme', nextIsDark ? 'dark' : 'light');
+            toggleBtn.textContent = nextIsDark ? '☀️' : '🌙';
+            updateBrandAssets();
+        });
+    }
+
+    updateBrandAssets();
+}
+
+function getOrderTypeLabel(order) {
+    if (order.shirtType !== 'custom') return 'Plain';
+    return order.customDesign ? 'Uploaded Custom' : 'Customized';
+}
+
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    // Sync light/dark mode theme with main website preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark');
-    }
+    initTheme();
+    initUsersPanel();
 
     checkAuth();
     $('#login-btn').addEventListener('click', handleLogin);

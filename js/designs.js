@@ -43,6 +43,17 @@ function updateCartBadge() {
     badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
+function updateBrandAssets() {
+    const isDark = document.body.classList.contains('dark');
+    const logo = $('#site-logo');
+    const footerLogo = $('#footer-logo');
+    const favicon = $('#site-favicon');
+    const asset = isDark ? 'assets/pappy_dark.svg' : 'assets/pappy_light.svg';
+    if (logo) logo.src = asset;
+    if (footerLogo) footerLogo.src = asset;
+    if (favicon) favicon.href = asset;
+}
+
 // ─── Design Catalog ───────────────────────────────────────────────────────────
 
 const DESIGN_CATALOG = Array.from({ length: 47 }, (_, i) => {
@@ -496,10 +507,12 @@ function initTheme() {
         document.body.classList.remove('dark');
         toggleBtn.textContent = '🌙';
     }
+    updateBrandAssets();
     toggleBtn.addEventListener('click', () => {
         const isDark = document.body.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         toggleBtn.textContent = isDark ? '☀️' : '🌙';
+        updateBrandAssets();
     });
 }
 

@@ -233,6 +233,19 @@ ol {
     border-color: var(--color-border-dark);
 }
 
+.hero__see-designs {
+    background: #ffffff;
+    color: #111827;
+    border-color: #e5e7eb;
+}
+
+.hero__see-designs:hover {
+    background: #ffffff;
+    color: #111827;
+    border-color: #e5e7eb;
+    transform: none;
+}
+
 .btn-success {
     background: var(--color-success);
     color: #fff;
@@ -396,10 +409,27 @@ body.dark .design-tag {
     color: #000000 !important;
 }
 
+body.dark .filter-pill:not(.active) {
+    color: #ffffff !important;
+}
+
 body.dark .btn-secondary {
     background: var(--color-bg-muted);
     border-color: var(--color-border);
     color: var(--color-text);
+}
+
+body.dark .hero__see-designs {
+    background: var(--color-bg-muted);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark .hero__see-designs:hover {
+    background: var(--color-bg-muted);
+    border-color: var(--color-border);
+    color: var(--color-text);
+    transform: none;
 }
 
 body.dark .btn-secondary:hover {

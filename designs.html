@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/pappy_light.svg" id="site-favicon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -20,7 +21,9 @@
     <!-- Header -->
     <header class="site-header">
         <div class="site-header__inner">
-            <a href="index.html" class="logo">SIGNOUTSHIRTS.</a>
+            <a href="index.html" class="logo" aria-label="Signoutshirts home">
+                <img src="assets/pappy_light.svg" alt="Signoutshirts" class="logo__img" id="site-logo">
+            </a>
             <nav class="nav">
                 <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
@@ -71,7 +74,9 @@
     <footer class="site-footer">
         <div class="site-footer__grid">
             <div class="footer-brand">
-                <a href="index.html" class="logo">SIGNOUTSHIRTS.</a>
+                <a href="index.html" class="logo" aria-label="Signoutshirts home">
+                    <img src="assets/pappy_light.svg" alt="Signoutshirts" class="logo__img" id="footer-logo">
+                </a>
                 <p class="footer-tagline">Simplifying sign-out shirt ordering for 400-Level students.</p>
             </div>
             <div class="footer-col">

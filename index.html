@@ -10,6 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/pappy_light.svg" id="site-favicon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -21,7 +22,9 @@
     <!-- Header -->
     <header class="site-header">
         <div class="site-header__inner">
-            <a href="#" class="logo">SIGNOUTSHIRTS.</a>
+            <a href="#" class="logo" aria-label="Signoutshirts home">
+                <img src="assets/pappy_light.svg" alt="Signoutshirts" class="logo__img" id="site-logo">
+            </a>
             <nav class="nav">
                 <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
@@ -48,11 +51,11 @@
         <section class="hero">
             <div class="container hero__inner">
                 <span class="hero__badge">Class of 2026</span>
-                <h1 class="t-xl hero__title">Order Your Sign-Out Shirt</h1>
-                <p class="hero__sub">Pick your design, choose your size, pay, and we handle the rest.</p>
+                <h1 class="t-xl hero__title">Your Sign-Out Shirt, Your Story.</h1>
+                <p class="hero__sub">Celebrate the Class of 2026 with a custom sign-out shirt made just for you.</p>
                 <div class="hero__actions">
                     <a href="#order-form" class="btn btn-primary">Place Order</a>
-                    <a href="#gallery" class="btn btn-secondary">See Designs</a>
+                    <a href="#gallery" class="btn btn-secondary hero__see-designs">See Designs</a>
                 </div>
             </div>
         </section>
@@ -467,7 +470,9 @@
     <footer class="site-footer">
         <div class="site-footer__grid">
             <div class="footer-brand">
-                <a href="#" class="logo">SIGNOUTSHIRTS.</a>
+                <a href="#" class="logo" aria-label="Signoutshirts home">
+                    <img src="assets/pappy_light.svg" alt="Signoutshirts" class="logo__img" id="footer-logo">
+                </a>
                 <p class="footer-tagline">Simplifying sign-out shirt ordering for 400-Level students.</p>
             </div>
             <div class="footer-col">

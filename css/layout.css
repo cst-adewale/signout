@@ -50,11 +50,15 @@
 }
 
 .logo {
-    font-family: var(--font-head);
-    font-weight: 800;
-    font-size: 1.25rem;
-    letter-spacing: 0em;
-    color: var(--color-text);
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.logo__img {
+    display: block;
+    height: 42px;
+    width: auto;
 }
 
 .nav {
@@ -236,7 +240,7 @@
 
 .footer-brand .logo {
     margin-bottom: var(--sp-2);
-    display: inline-block;
+    display: inline-flex;
 }
 
 .footer-tagline {

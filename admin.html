@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/pappy_light.svg" id="site-favicon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -201,13 +202,16 @@
         <!-- Header — same style as main site -->
         <header class="site-header">
             <div class="site-header__inner">
-                <a href="index.html" class="logo">SIGNOUTSHIRTS.</a>
+                <a href="index.html" class="logo" aria-label="Signoutshirts home">
+                    <img src="assets/pappy_light.svg" alt="Signoutshirts" class="logo__img" id="site-logo">
+                </a>
                 <nav class="nav">
                     <button class="nav__toggle" id="admin-nav-toggle" aria-label="Toggle menu">
                         <span></span><span></span><span></span>
                     </button>
                     <div class="nav__links" id="admin-nav-links">
                         <span class="nav__link" style="color: var(--color-text-faint); font-size:.8rem; pointer-events:none; cursor:default;">Admin Panel</span>
+                        <button id="admin-theme-toggle" class="nav__link" style="background:none;border:none;cursor:pointer;color:var(--color-text-sub);font-size:.9375rem;font-weight:500;text-align:left;padding:0;" aria-label="Toggle Theme">🌙</button>
                         <a href="index.html" class="nav__link">← Back to Store</a>
                         <button class="nav__link" id="logout-btn" style="background:none;border:none;cursor:pointer;color:var(--color-text-sub);font-size:.9375rem;font-weight:500;text-align:left;padding:0;">Sign Out</button>
                         <button class="btn" id="wipe-db-btn" style="background:#dc2626;color:#fff;border:none;font-size:.85rem;padding:.35rem .9rem;border-radius:var(--r-md);cursor:pointer;" title="Wipe entire database">🗑 Wipe DB</button>
@@ -286,8 +290,11 @@
                         <h2 class="t-md" style="margin-bottom:.25rem;">Registered Users</h2>
                         <p class="t-xs text-sub">Students who have signed up on the platform.</p>
                     </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="users-toggle-btn" aria-expanded="false" aria-controls="admin-users-list">
+                        Show Users
+                    </button>
                 </div>
-                <div class="admin-users-list" id="admin-users-list" style="display: flex; flex-direction: column; gap: var(--sp-4); padding: var(--sp-4) 0; max-height: 400px; overflow-y: auto;">
+                <div class="admin-users-list" id="admin-users-list" hidden style="display: flex; flex-direction: column; gap: var(--sp-4); padding: var(--sp-4) 0; max-height: 400px; overflow-y: auto;">
                     <!-- Populated by JS -->
                 </div>
             </div>
